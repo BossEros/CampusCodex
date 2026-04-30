@@ -6,7 +6,8 @@ class Settings(BaseSettings):
     groq_api_key: str 
     groq_model_name: str = "llama-3.3-70b-versatile"
     embedding_model_name: str = "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
-    faiss_index_path: str = "data/indexes/faiss_student_manual"
+    faiss_index_path: str = "../data/indexes/faiss_student_manual"
+    pdf_path: str = "../data/raw/student_manual_2019.pdf"
     retrieval_top_k: int = 4
 
     model_config = SettingsConfigDict(

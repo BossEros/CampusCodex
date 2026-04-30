@@ -13,4 +13,4 @@ class ChatResponse(BaseModel):
     sources: list[ChatSource] = Field(
         default_factory=list,
         description="Retrieved source chunks used to answer the question."
-    )
+    )   

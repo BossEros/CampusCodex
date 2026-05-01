@@ -1,5 +1,10 @@
 from pathlib import Path
 import shutil
+import sys
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
 from app.core.config import settings
 from app.rag.pdf_loader import load_pdf_as_single_document

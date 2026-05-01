@@ -9,12 +9,19 @@ SYSTEM_PROMPT = """
 You are a helpful assistant for the University of Cebu Student Manual.
 
 Answer only from the provided context.
-If the answer is not in the context, say:
-"The student manual does not provide enough information to answer that."
+If the information isn’t in the given context, go ahead and provide a useful answer based on what you know. Just slip in a brief, natural note that it might not be included in the student manual, without making it sound too formal or overly emphasized.
 
-Keep the answer clear and concise.
+Keep the answer clear, properly formatted, and concise.
 """.strip()
+# Previous version of SYSTEM_PROMPT:
+#You are a helpful assistant for the University of Cebu Student Manual.
 
+#Answer only from the provided context.
+#If the answer is not in the context, say:
+#"The student manual does not provide enough information to answer that."
+
+#Keep the answer clear and concise.
+# END
 
 def retrieve_relevant_chunks (
     vector_store: FAISS,
@@ -41,7 +48,10 @@ def generate_answer(
         raise ValueError("Question must not be empty")
     
     if not context.strip():
-        raise "The student manual does not provide enough information to answer that."
+        return "The student manual does not provide enough information to answer that."
+
+    if not settings.groq_api_key:
+        raise ValueError("GROQ_API_KEY is required to generate answers.")
     
     llm = ChatGroq(
         api_key=settings.groq_api_key,

@@ -146,6 +146,9 @@ async function fetchJson(path, options = {}) {
 export default function App() {
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
+  const [activeSources, setActiveSources] = useState([]);
+  const [activeEvidenceMessageId, setActiveEvidenceMessageId] = useState("");
+  const [isEvidenceOpen, setIsEvidenceOpen] = useState(false);
   const [indexStatus, setIndexStatus] = useState(null);
   const [statusError, setStatusError] = useState("");
   const [chatError, setChatError] = useState("");
@@ -212,6 +215,21 @@ export default function App() {
     textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
   }, [question]);
 
+  function handleAssistantMessageClick(message) {
+    if (!message.sources?.length) {
+      return;
+    }
+
+    setActiveSources(message.sources);
+    setActiveEvidenceMessageId(message.id);
+    setIsEvidenceOpen(true);
+  }
+
+  function handleCloseEvidence() {
+    setIsEvidenceOpen(false);
+    setActiveEvidenceMessageId("");
+  }
+
   async function handleSubmit(submittedQuestion) {
     const trimmedQuestion = submittedQuestion.trim();
     if (!trimmedQuestion || isSending) {
@@ -242,6 +260,7 @@ export default function App() {
         id: crypto.randomUUID(),
         role: "assistant",
         content: data.answer,
+        sources: data.sources ?? [],
       };
 
       setMessages((currentMessages) => [...currentMessages, assistantMessage]);
@@ -305,86 +324,146 @@ export default function App() {
           </div>
         </aside>
 
-        <main className="chat-stage">
-          <div className="chat-header">
-            <div>
-              <p className="panel-kicker">Conversation</p>
-              <h2>Ask about the manual</h2>
-            </div>
-            <p className="panel-note">Keep questions specific for better retrieval.</p>
-          </div>
-
-          <div ref={messageListRef} className="message-list">
-            {messages.length === 0 ? (
-              <div className="quick-start-card">
-                <p className="panel-kicker">Quick Start</p>
-                <h3 className="quick-start-title">Try one of these questions</h3>
-                <p className="quick-start-copy">
-                  Start with admissions, student services, discipline, or transfer
-                  policies.
-                </p>
-                <div className="starter-grid">
-                  {STARTER_QUESTIONS.map((starterQuestion) => (
-                    <button
-                      key={starterQuestion}
-                      type="button"
-                      className="starter-chip"
-                      onClick={() => void handleSubmit(starterQuestion)}
-                      disabled={isSending}
-                    >
-                      {starterQuestion}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              messages.map((message) => (
-                <article key={message.id} className={`message-card ${message.role}`}>
-                  <p className="message-role">
-                    {message.role === "user" ? "You" : "Assistant"}
-                  </p>
-                  {message.role === "assistant" ? (
-                    <FormattedMessage content={message.content} />
-                  ) : (
-                    <p className="message-content">{message.content}</p>
-                  )}
-                </article>
-              ))
-            )}
-
-            {isSending ? (
-              <article className="message-card assistant loading-card">
-                <p className="message-role">Assistant</p>
-                <p className="message-content">Looking through the manual...</p>
-              </article>
-            ) : null}
-          </div>
-
-          {chatError ? <p className="banner error chat-banner">{chatError}</p> : null}
-
-          <div className="composer-dock">
-            <form className="composer" onSubmit={handleFormSubmit}>
-              <textarea
-                id="question"
-                ref={composerInputRef}
-                className="composer-input"
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                placeholder="Example: What documents does a transferee need to submit?"
-                rows={1}
-                disabled={isSending}
+        <main className="main-column">
+          <section className="chat-stage">
+            {isEvidenceOpen ? (
+              <button
+                type="button"
+                className="evidence-backdrop"
+                aria-label="Close evidence panel"
+                onClick={handleCloseEvidence}
               />
-              <div className="composer-actions">
+            ) : null}
+
+            <div ref={messageListRef} className="message-list">
+              {messages.length === 0 ? (
+                <div className="quick-start-card">
+                  <p className="panel-kicker">Quick Start</p>
+                  <h3 className="quick-start-title">Try one of these questions</h3>
+                  <p className="quick-start-copy">
+                    Start with admissions, student services, discipline, or transfer
+                    policies.
+                  </p>
+                  <div className="starter-grid">
+                    {STARTER_QUESTIONS.map((starterQuestion) => (
+                      <button
+                        key={starterQuestion}
+                        type="button"
+                        className="starter-chip"
+                        onClick={() => void handleSubmit(starterQuestion)}
+                        disabled={isSending}
+                      >
+                        {starterQuestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                messages.map((message) => (
+                  <article
+                    key={message.id}
+                    className={`message-card ${message.role} ${
+                      message.id === activeEvidenceMessageId ? "active-evidence" : ""
+                    } ${message.role === "assistant" ? "interactive-message" : ""}`}
+                    onClick={() =>
+                      message.role === "assistant"
+                        ? handleAssistantMessageClick(message)
+                        : undefined
+                    }
+                  >
+                    <p className="message-role">
+                      {message.role === "user" ? "You" : "Assistant"}
+                    </p>
+                    {message.role === "assistant" ? (
+                      <FormattedMessage content={message.content} />
+                    ) : (
+                      <p className="message-content">{message.content}</p>
+                    )}
+                  </article>
+                ))
+              )}
+
+              {isSending ? (
+                <article className="message-card assistant loading-card">
+                  <p className="message-role">Assistant</p>
+                  <p className="message-content">Looking through the manual...</p>
+                </article>
+              ) : null}
+            </div>
+
+            {chatError ? <p className="banner error chat-banner">{chatError}</p> : null}
+
+            <div className="composer-dock">
+              <form className="composer" onSubmit={handleFormSubmit}>
+                <textarea
+                  id="question"
+                  ref={composerInputRef}
+                  className="composer-input"
+                  value={question}
+                  onChange={(event) => setQuestion(event.target.value)}
+                  placeholder="Example: What documents does a transferee need to submit?"
+                  rows={1}
+                  disabled={isSending}
+                />
+                <div className="composer-actions">
+                  <p className="composer-note">Keep questions specific for better retrieval.</p>
+                  <button
+                    type="submit"
+                    className="submit-button"
+                    disabled={isSending || !question.trim()}
+                  >
+                    {isSending ? "Sending..." : "Ask the manual"}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <aside className={`evidence-drawer ${isEvidenceOpen ? "open" : ""}`}>
+              <div className="evidence-drawer-header">
+                <div>
+                  <p className="panel-kicker">Evidence</p>
+                  <h3 className="evidence-title">Retrieved supporting excerpts</h3>
+                </div>
                 <button
-                  type="submit"
-                  className="submit-button"
-                  disabled={isSending || !question.trim()}
+                  type="button"
+                  className="evidence-close"
+                  aria-label="Close evidence panel"
+                  onClick={handleCloseEvidence}
                 >
-                  {isSending ? "Sending..." : "Ask the manual"}
+                  Close
                 </button>
               </div>
-            </form>
-          </div>
+
+              {activeSources.length > 0 ? (
+                <>
+                  <p className="evidence-note">
+                    This panel shows the retrieved chunks behind the selected
+                    assistant response.
+                  </p>
+                  <div className="evidence-list">
+                    {activeSources.map((source, index) => (
+                      <article key={`${source.excerpt}-${index}`} className="evidence-card">
+                        <div className="evidence-meta">
+                          <span className="status-label">Chunk {index + 1}</span>
+                          <span className="evidence-score">
+                            Score {Number(source.score).toFixed(3)}
+                          </span>
+                        </div>
+                        <p className="evidence-excerpt">{source.excerpt}</p>
+                      </article>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="evidence-empty">
+                  <p className="empty-title">No evidence selected yet.</p>
+                  <p className="empty-copy">
+                    Click an assistant response to open its retrieved excerpts here.
+                  </p>
+                </div>
+              )}
+            </aside>
+          </section>
         </main>
       </div>
     </div>

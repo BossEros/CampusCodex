@@ -291,37 +291,6 @@ export default function App() {
               flow in one focused workspace.
             </p>
           </div>
-
-          <div className="sidebar-section">
-            <p className="panel-kicker">System Status</p>
-            <div className="status-stack">
-              <div className={`status-card ${indexStatus?.index_loaded ? "ok" : ""}`}>
-                <span className="status-label">Index</span>
-                <span className="status-value">
-                  {isLoadingStatus
-                    ? "Loading..."
-                    : indexStatus?.index_loaded
-                      ? "Ready"
-                      : "Unavailable"}
-                </span>
-              </div>
-
-              <div className="status-card">
-                <span className="status-label">Embedding</span>
-                <span className="status-value">
-                  {indexStatus?.embedding_model ?? "Waiting for backend"}
-                </span>
-              </div>
-
-              <div className="status-card">
-                <span className="status-label">Top K</span>
-                <span className="status-value">
-                  {indexStatus?.retrieval_top_k ?? "--"}
-                </span>
-              </div>
-            </div>
-            {statusError ? <p className="banner error sidebar-banner">{statusError}</p> : null}
-          </div>
         </aside>
 
         <main className="main-column">
@@ -406,7 +375,6 @@ export default function App() {
                   disabled={isSending}
                 />
                 <div className="composer-actions">
-                  <p className="composer-note">Keep questions specific for better retrieval.</p>
                   <button
                     type="submit"
                     className="submit-button"

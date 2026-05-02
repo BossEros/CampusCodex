@@ -23,7 +23,7 @@ This project has two major parts:
 
 ### RAG / AI
 - LangChain
-- PyPDFLoader
+- PDFPlumberLoader
 - RecursiveCharacterTextSplitter
 - HuggingFace Embeddings
 - FAISS
@@ -104,7 +104,7 @@ python app/scripts/build_index.py
 ```
 
 What this does:
-- loads the PDF as a single continuous text flow
+- loads the PDF as page-level documents with page metadata
 - splits it into overlapping chunks
 - embeds the chunks
 - builds the FAISS index
@@ -164,7 +164,9 @@ Response:
   "sources": [
     {
       "excerpt": "A short preview of a retrieved chunk...",
-      "score": 0.42
+      "score": 7.42,
+      "page_number": 69,
+      "source": "C:\\Users\\...\\data\\raw\\student_manual_2019.pdf"
     }
   ]
 }
@@ -172,9 +174,9 @@ Response:
 
 ## Notes
 
-- The PDF is currently loaded in `mode="single"`, not page mode.
-- This improves text continuity across page boundaries.
-- Page-level citations are not preserved in the current design.
+- The PDF is loaded with `PDFPlumberLoader`, which returns page-level documents.
+- Page metadata is preserved through chunking and returned with retrieved sources when available.
+- FAISS retrieves candidate chunks first, then a CrossEncoder reranks the best sources.
 - The FAISS index is built offline and loaded once on backend startup.
 
 For architecture details and module responsibilities, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).

@@ -42,7 +42,9 @@ def get_index_status() -> dict:
         "pdf_path": settings.pdf_path,
         "index_path": settings.faiss_index_path,
         "embedding_model": settings.embedding_model_name,
-        "retrieval_top_k": settings.retrieval_top_k,
+        "retrieval_candidate_k": settings.retrieval_candidate_k,
+        "reranked_top_k": settings.reranked_top_k,
+        "reranker_model": settings.reranker_model_name,
     }
 
 

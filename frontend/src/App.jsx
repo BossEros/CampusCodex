@@ -37,6 +37,14 @@ function renderInline(text) {
   });
 }
 
+function getSourceLabel(source, index) {
+  if (source.page_number) {
+    return `Source ${index + 1} · Page ${source.page_number}`;
+  }
+
+  return `Source ${index + 1}`;
+}
+
 function FormattedMessage({ content }) {
   const blocks = [];
   const lines = normalizeMessageContent(content).split("\n");
@@ -412,7 +420,9 @@ export default function App() {
                     {activeSources.map((source, index) => (
                       <article key={`${source.excerpt}-${index}`} className="evidence-card">
                         <div className="evidence-meta">
-                          <span className="status-label">Chunk {index + 1}</span>
+                          <span className="status-label">
+                            {getSourceLabel(source, index)}
+                          </span>
                           <span className="evidence-score">
                             Score {Number(source.score).toFixed(3)}
                           </span>

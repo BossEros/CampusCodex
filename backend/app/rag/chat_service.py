@@ -3,6 +3,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from langchain_community.vectorstores import FAISS
 from app.core.config import settings
+from app.rag.reranker import rerank_documents
 
 
 SYSTEM_PROMPT = """
@@ -13,15 +14,6 @@ If the information isn’t in the given context, go ahead and provide a useful a
 
 Keep the answer clear, properly formatted, and concise.
 """.strip()
-# Previous version of SYSTEM_PROMPT:
-#You are a helpful assistant for the University of Cebu Student Manual.
-
-#Answer only from the provided context.
-#If the answer is not in the context, say:
-#"The student manual does not provide enough information to answer that."
-
-#Keep the answer clear and concise.
-# END
 
 def retrieve_relevant_chunks (
     vector_store: FAISS,
@@ -30,13 +22,24 @@ def retrieve_relevant_chunks (
     if not question.strip():
         raise ValueError("Question must not be empty")
     
-    return vector_store.similarity_search_with_score(question, k=settings.retrieval_top_k)
+    candidate_documents = vector_store.similarity_search_with_score(
+        question,
+        k=settings.retrieval_candidate_k
+    )
+    
+    return rerank_documents(
+        question=question,
+        documents_with_scores=candidate_documents,
+        top_k=settings.reranked_top_k,
+    )
 
 def build_context(documents_with_scores: list[tuple[Document, float]]) -> str: 
     context_parts: list[str] = []
     
     for index, (document, _) in enumerate(documents_with_scores, start=1):
-        context_parts.append(f"Context {index}:\n{document.page_content}")
+        page_number = get_display_page_number(document)
+        page_label = f"Page {page_number}" if page_number is not None else "Page unknown"
+        context_parts.append(f"Context {index} ({page_label}):\n{document.page_content}")
         
     return "\n\n".join(context_parts)
 
@@ -79,6 +82,18 @@ def generate_answer(
     
     return response.content.strip()
 
+def get_display_page_number(document: Document) -> int | None:
+    page_number = document.metadata.get("page")
+
+    if page_number is None:
+        return None
+
+    try:
+        return int(page_number) + 1
+    except (TypeError, ValueError):
+        return None
+
+
 def build_sources(
     documents_with_scores: list[tuple[Document, float]],
     excerpt_length: int = 220
@@ -91,7 +106,9 @@ def build_sources(
         sources.append(
             {
                 "excerpt": excerpt,
-                "score": float(score)
+                "score": float(score),
+                "page_number": get_display_page_number(document),
+                "source": document.metadata.get("source"),
             }
         )
         

@@ -42,7 +42,7 @@ It works in two phases:
 
 ### RAG / AI
 - LangChain
-- PyPDFLoader
+- PDFPlumberLoader
 - RecursiveCharacterTextSplitter
 - HuggingFace Embeddings
 - FAISS
@@ -104,7 +104,9 @@ Current settings:
 - `embedding_model_name`
 - `faiss_index_path`
 - `pdf_path`
-- `retrieval_top_k`
+- `retrieval_candidate_k`
+- `reranked_top_k`
+- `reranker_model_name`
 
 Design rule:
 - secrets and environment-specific settings belong here
@@ -116,15 +118,15 @@ Purpose:
 - load the source PDF into LangChain `Document` objects
 
 Current design:
-- uses `PyPDFLoader(..., mode="single")`
-- treats the full PDF as one continuous text flow
+- uses `PDFPlumberLoader`
+- loads the PDF as page-level LangChain `Document` objects
 
 Reason for this choice:
-- better continuity across page boundaries
-- avoids splitting context purely because a page ended
+- preserves page metadata for retrieved source citations
+- improves extraction behavior for layout-heavy PDF content
 
 Tradeoff:
-- page-level citations are not preserved
+- text continuity across page boundaries depends on chunk overlap rather than single-document extraction
 
 ### `backend/app/rag/text_chunker.py`
 
@@ -173,7 +175,7 @@ Current responsibilities:
 - retrieve relevant chunks from FAISS
 - build prompt context
 - call Groq
-- return the answer and source excerpts
+- return the answer, source excerpts, and page metadata when available
 
 Design rule:
 - no indexing logic belongs here
@@ -279,8 +281,7 @@ Detailed sequence:
 
 ## Current Constraints
 
-- PDF extraction is single-flow, not page-based.
-- Page numbers are not preserved in the current response model.
+- Page numbers come from PDF document metadata and should be treated as citations to extracted source pages.
 - Retrieval quality depends heavily on chunking and embedding quality.
 - The current frontend/backend integration assumes local development.
 

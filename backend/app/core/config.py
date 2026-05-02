@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     embedding_model_name: str = "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
     faiss_index_path: str = str(PROJECT_ROOT / "data" / "indexes" / "faiss_student_manual")
     pdf_path: str = str(PROJECT_ROOT / "data" / "raw" / "student_manual_2019.pdf")
-    retrieval_top_k: int = 4
+    retrieval_candidate_k: int = 15
+    reranked_top_k: int = 5
+    reranker_model_name: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIR / ".env",

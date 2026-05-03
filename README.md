@@ -3,7 +3,7 @@
 RAG chatbot for the University of Cebu Student Manual 2019 PDF.
 
 This project has two major parts:
-- `backend/`: FastAPI API, RAG pipeline, FAISS index loading, Groq-based answer generation
+- `backend/`: FastAPI API, RAG pipeline, FAISS index loading, provider-based answer generation
 - `frontend/`: React/Vite client for the chat UI
 
 ## Tech Stack
@@ -27,11 +27,11 @@ This project has two major parts:
 - RecursiveCharacterTextSplitter
 - HuggingFace Embeddings
 - FAISS
-- Groq API
+- Groq API, Anthropic Claude API, or Gemini API
 
 ### Models
 - Embedding model: `sentence-transformers/multi-qa-MiniLM-L6-cos-v1`
-- Chat model: `llama-3.3-70b-versatile`
+- Default chat model: `claude-haiku-4-5`
 
 ## Project Structure
 
@@ -79,11 +79,23 @@ pip install -r requirements.txt
 
 Create `backend/.env` from `backend/.env.example`.
 
-Minimum required value:
+Minimum required values for the default Claude/Anthropic setup:
 
 ```env
-GROQ_API_KEY=your_groq_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+LLM_PROVIDER=anthropic
+LLM_MODEL_NAME=claude-haiku-4-5
 ```
+
+To use Gemini instead:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+LLM_PROVIDER=gemini
+LLM_MODEL_NAME=gemini-2.5-flash
+```
+
+To use Groq instead, set `LLM_PROVIDER=groq`, provide `GROQ_API_KEY`, and choose a Groq-supported `LLM_MODEL_NAME`.
 
 Current backend settings are loaded from `backend/app/core/config.py`.
 
@@ -176,6 +188,7 @@ Response:
 
 - The PDF is loaded with `PDFPlumberLoader`, which returns page-level documents.
 - Page metadata is preserved through chunking and returned with retrieved sources when available.
+- Vague student questions can be rewritten for retrieval when `ENABLE_QUERY_REWRITE=true`.
 - FAISS retrieves candidate chunks first, then a CrossEncoder reranks the best sources.
 - The FAISS index is built offline and loaded once on backend startup.
 

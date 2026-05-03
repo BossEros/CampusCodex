@@ -7,13 +7,17 @@ PROJECT_ROOT = BACKEND_DIR.parent
 
 class Settings(BaseSettings):
     groq_api_key: str | None = None
-    groq_model_name: str = "llama-3.3-70b-versatile"
+    anthropic_api_key: str | None = None
+    gemini_api_key: str | None = None
+    llm_provider: str = "anthropic"
+    llm_model_name: str = "claude-haiku-4-5"
     embedding_model_name: str = "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
     faiss_index_path: str = str(PROJECT_ROOT / "data" / "indexes" / "faiss_student_manual")
     pdf_path: str = str(PROJECT_ROOT / "data" / "raw" / "student_manual_2019.pdf")
     retrieval_candidate_k: int = 15
     reranked_top_k: int = 5
     reranker_model_name: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
+    enable_query_rewrite: bool = True
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIR / ".env",

@@ -44,7 +44,10 @@ def get_index_status() -> dict:
         "embedding_model": settings.embedding_model_name,
         "retrieval_candidate_k": settings.retrieval_candidate_k,
         "reranked_top_k": settings.reranked_top_k,
+        "llm_provider": settings.llm_provider,
+        "llm_model": settings.llm_model_name,
         "reranker_model": settings.reranker_model_name,
+        "enable_query_rewrite": settings.enable_query_rewrite,
     }
 
 

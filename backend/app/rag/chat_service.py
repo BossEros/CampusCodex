@@ -1,34 +1,33 @@
+from typing import TYPE_CHECKING
+
 from langchain_core.documents import Document
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_groq import ChatGroq
-from langchain_community.vectorstores import FAISS
 from app.core.config import settings
 from app.rag.reranker import rerank_documents
+from app.llm.factory import create_llm_provider
+from app.rag.query_transformer import rewrite_query_for_retrieval
+
+if TYPE_CHECKING:
+    from langchain_community.vectorstores import FAISS
 
 
-SYSTEM_PROMPT = """
-You are a helpful assistant for the University of Cebu Student Manual.
-
-Answer only from the provided context.
-If the information isn’t in the given context, say that the information is not available.
-
-Keep the answer clear, properly formatted, and concise.
-""".strip()
-
-def retrieve_relevant_chunks (
-    vector_store: FAISS,
-    question: str, 
+def retrieve_relevant_chunks(
+    vector_store: "FAISS",
+    retrieval_query: str,
+    reranking_question: str,
 ) -> list[tuple[Document, float]]:
-    if not question.strip():
-        raise ValueError("Question must not be empty")
+    if not retrieval_query.strip():
+        raise ValueError("Retrieval query must not be empty")
+
+    if not reranking_question.strip():
+        raise ValueError("Reranking question must not be empty")
     
     candidate_documents = vector_store.similarity_search_with_score(
-        question,
+        retrieval_query,
         k=settings.retrieval_candidate_k
     )
-    
+
     return rerank_documents(
-        question=question,
+        question=reranking_question,
         documents_with_scores=candidate_documents,
         top_k=settings.reranked_top_k,
     )
@@ -53,34 +52,13 @@ def generate_answer(
     if not context.strip():
         return "The student manual does not provide enough information to answer that."
 
-    if not settings.groq_api_key:
-        raise ValueError("GROQ_API_KEY is required to generate answers.")
+    llm_provider = create_llm_provider()
     
-    llm = ChatGroq(
-        api_key=settings.groq_api_key,
-        model=settings.groq_model_name,
-        temperature=0
+    return llm_provider.generate_answer(
+        question=question,
+        context=context,
     )
-    
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", SYSTEM_PROMPT),
-            (
-                "human",
-                "Question:\n{question}\n\nContext:\n{context}"
-            ),
-        ]
-    )
-    
-    chain = prompt | llm
-    response = chain.invoke(
-        {
-            "question": question,
-            "context": context,
-        }
-    )
-    
-    return response.content.strip()
+   
 
 def get_display_page_number(document: Document) -> int | None:
     page_number = document.metadata.get("page")
@@ -115,12 +93,15 @@ def build_sources(
     return sources
 
 def answer_questions(
-    vector_store: FAISS,
+    vector_store: "FAISS",
     question: str,
 ) -> dict:
+    retrieval_query = rewrite_query_for_retrieval(question)
+    
     documents_with_scores = retrieve_relevant_chunks(
-        vector_store,
-        question,
+        vector_store=vector_store,
+        retrieval_query=retrieval_query,
+        reranking_question=question,
     )
 
     context = build_context(documents_with_scores)

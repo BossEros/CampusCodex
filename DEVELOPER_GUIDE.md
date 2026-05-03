@@ -21,8 +21,9 @@ It works in two phases:
 2. Runtime question answering
    - load the saved FAISS index on backend startup
    - receive a user question
+   - optionally rewrite vague questions for retrieval
    - retrieve relevant chunks
-   - send retrieved context to Groq
+   - send retrieved context to the configured LLM provider
    - return an answer and source previews
 
 ## Tech Stack
@@ -46,11 +47,11 @@ It works in two phases:
 - RecursiveCharacterTextSplitter
 - HuggingFace Embeddings
 - FAISS
-- Groq API
+- Groq API, Anthropic Claude API, or Gemini API
 
 ### Models
 - Embedding model: `sentence-transformers/multi-qa-MiniLM-L6-cos-v1`
-- Chat model: `llama-3.3-70b-versatile`
+- Default chat model: `claude-haiku-4-5`
 
 ## Current Architecture
 
@@ -58,9 +59,10 @@ It works in two phases:
 User question
   -> FastAPI endpoint
   -> chat_service.py
+  -> optional query rewrite
   -> FAISS similarity search
   -> retrieved chunks
-  -> Groq LLM
+  -> configured LLM provider
   -> answer + source excerpts
 ```
 
@@ -100,13 +102,17 @@ Purpose:
 
 Current settings:
 - `groq_api_key`
-- `groq_model_name`
+- `anthropic_api_key`
+- `gemini_api_key`
+- `llm_provider`
+- `llm_model_name`
 - `embedding_model_name`
 - `faiss_index_path`
 - `pdf_path`
 - `retrieval_candidate_k`
 - `reranked_top_k`
 - `reranker_model_name`
+- `enable_query_rewrite`
 
 Design rule:
 - secrets and environment-specific settings belong here
@@ -172,9 +178,10 @@ Purpose:
 
 Current responsibilities:
 - validate the question
+- rewrite the question for retrieval when enabled
 - retrieve relevant chunks from FAISS
 - build prompt context
-- call Groq
+- call the configured LLM provider
 - return the answer, source excerpts, and page metadata when available
 
 Design rule:
@@ -265,10 +272,11 @@ This happens when the FastAPI app is running.
 Detailed sequence:
 1. `main.py` loads the FAISS index once during startup
 2. the client sends a question to `POST /api/chat`
-3. `chat_service.py` retrieves the top matching chunks
-4. the retrieved chunks are combined into context
-5. Groq generates an answer from that context
-6. the API returns the answer and source previews
+3. `query_transformer.py` optionally rewrites vague questions for retrieval
+4. `chat_service.py` retrieves and reranks the top matching chunks
+5. the retrieved chunks are combined into context
+6. the configured LLM provider generates an answer from that context
+7. the API returns the answer and source previews
 
 ## Development Rules
 

@@ -388,7 +388,7 @@ export default function App() {
                     className="submit-button"
                     disabled={isSending || !question.trim()}
                   >
-                    {isSending ? "Sending..." : "Ask the manual"}
+                    {isSending ? "Sending..." : "Send"}
                   </button>
                 </div>
               </form>

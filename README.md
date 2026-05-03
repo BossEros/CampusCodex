@@ -69,10 +69,24 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 ```
 
+For Linux / macOS (bash/zsh):
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
 ### 2. Install dependencies
 
 ```powershell
 pip install -r requirements.txt
+```
+
+For Linux / macOS (with the venv activated):
+
+```bash
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -r requirements.txt
 ```
 
 ### 3. Configure environment variables
@@ -103,6 +117,8 @@ From `backend/`:
 python app/scripts/build_index.py
 ```
 
+Note: the `python app/scripts/build_index.py` command is the same on Linux/macOS when the venv is activated.
+
 What this does:
 - loads the PDF as a single continuous text flow
 - splits it into overlapping chunks
@@ -117,6 +133,8 @@ From `backend/`:
 ```powershell
 uvicorn app.main:app --reload
 ```
+
+Note: the `uvicorn app.main:app --reload` command is the same on Linux/macOS when the venv is activated.
 
 Backend URL:
 
@@ -137,6 +155,8 @@ From `frontend/`:
 npm install
 npm run dev
 ```
+
+Note: `npm install` and `npm run dev` are the same on Linux/macOS and Windows.
 
 Frontend URL:
 

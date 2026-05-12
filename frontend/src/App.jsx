@@ -21,7 +21,7 @@ function normalizeMessageContent(content) {
   return content
     .replace(/\r\n/g, "\n")
     .replace(/([^\n])\s(?=\d+\.\s)/g, "$1\n")
-    .replace(/([^\n])\s(?=\*\s)/g, "$1\n")
+    .replace(/([^\n])\s(?=[*-]\s)/g, "$1\n")
     .replace(/([^\n])\s(?=Additionally,)/g, "$1\n\n")
     .replace(/([^\n])\s(?=Note that)/g, "$1\n\n")
     .trim();
@@ -70,11 +70,11 @@ function FormattedMessage({ content }) {
       continue;
     }
 
-    if (/^\*\s+/.test(line)) {
+    if (/^[*-]\s+/.test(line)) {
       const items = [];
 
-      while (index < lines.length && /^\*\s+/.test(lines[index].trim())) {
-        items.push(lines[index].trim().replace(/^\*\s+/, ""));
+      while (index < lines.length && /^[*-]\s+/.test(lines[index].trim())) {
+        items.push(lines[index].trim().replace(/^[*-]\s+/, ""));
         index += 1;
       }
 
@@ -92,7 +92,7 @@ function FormattedMessage({ content }) {
         break;
       }
 
-      if (/^\d+\.\s+/.test(currentLine) || /^\*\s+/.test(currentLine)) {
+      if (/^\d+\.\s+/.test(currentLine) || /^[*-]\s+/.test(currentLine)) {
         break;
       }
 

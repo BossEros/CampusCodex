@@ -56,6 +56,27 @@ class QueryRewriteTests(unittest.TestCase):
         self.assertIn("Latest student message:\nWhat about the requirements?", rewrite_input)
         self.assertEqual("What are the enrollment requirements?", retrieval_query)
 
+    def test_rewrite_query_for_retrieval_keeps_specific_new_topic_question_unchanged(self):
+        from app.rag.query_transformer import rewrite_query_for_retrieval
+        from app.schemas.chat import ChatMessage
+
+        llm_provider = Mock()
+        history = [
+            ChatMessage(role="user", content="What are the requirements for transfer students?"),
+        ]
+
+        with patch("app.rag.query_transformer.settings") as settings:
+            settings.enable_query_rewrite = True
+
+            with patch("app.rag.query_transformer.create_llm_provider", return_value=llm_provider):
+                retrieval_query = rewrite_query_for_retrieval(
+                    "What about requirements for latin honors?",
+                    history=history,
+                )
+
+        llm_provider.rewrite_query.assert_not_called()
+        self.assertEqual("What about requirements for latin honors?", retrieval_query)
+
     def test_answer_questions_retrieves_with_rewritten_query_and_answers_original_question(self):
         from app.rag import chat_service
 

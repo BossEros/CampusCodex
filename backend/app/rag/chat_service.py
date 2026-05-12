@@ -65,10 +65,15 @@ def get_display_page_number(document: Document) -> int | None:
     page_number = document.metadata.get("page")
 
     if page_number is None:
-        return None
+        page_number = document.metadata.get("page_number")
+        if page_number is None:
+            return None
 
     try:
-        return int(page_number) + 1
+        page_number = int(page_number)
+        if document.metadata.get("page") is None and document.metadata.get("page_number") is not None:
+            return page_number
+        return page_number + 1
     except (TypeError, ValueError):
         return None
 

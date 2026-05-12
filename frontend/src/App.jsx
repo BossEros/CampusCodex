@@ -5,8 +5,8 @@ const API_BASE_URL =
 
 const STARTER_QUESTIONS = [
   "What are the requirements for transfer students?",
-  "What services does the Guidance and Counseling Office provide?",
-  "What happens if a student commits theft?",
+  "What are the requirements for latin honors?",
+  "What are the rules on student absences?",
 ];
 
 function formatErrorMessage(error) {

@@ -290,6 +290,15 @@ export default function App() {
     void handleSubmit(question);
   }
 
+  function handleComposerKeyDown(event) {
+    if (event.key !== "Enter" || event.shiftKey) {
+      return;
+    }
+
+    event.preventDefault();
+    void handleSubmit(question);
+  }
+
   return (
     <div className="app-shell">
       <div className="backdrop backdrop-left" />
@@ -384,6 +393,7 @@ export default function App() {
                   className="composer-input"
                   value={question}
                   onChange={(event) => setQuestion(event.target.value)}
+                  onKeyDown={handleComposerKeyDown}
                   placeholder="Example: What documents does a transferee need to submit?"
                   rows={1}
                   disabled={isSending}

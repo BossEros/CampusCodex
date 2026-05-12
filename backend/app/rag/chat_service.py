@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.rag.reranker import rerank_documents
 from app.llm.factory import create_llm_provider
 from app.rag.query_transformer import rewrite_query_for_retrieval
+from app.schemas.chat import ChatMessage
 
 if TYPE_CHECKING:
     from langchain_community.vectorstores import FAISS
@@ -95,18 +96,19 @@ def build_sources(
 def answer_questions(
     vector_store: "FAISS",
     question: str,
+    history: list[ChatMessage] | None = None,
 ) -> dict:
-    retrieval_query = rewrite_query_for_retrieval(question)
+    resolved_question = rewrite_query_for_retrieval(question, history=history)
     
     documents_with_scores = retrieve_relevant_chunks(
         vector_store=vector_store,
-        retrieval_query=retrieval_query,
-        reranking_question=question,
+        retrieval_query=resolved_question,
+        reranking_question=resolved_question,
     )
 
     context = build_context(documents_with_scores)
     answer = generate_answer(
-        question,
+        resolved_question,
         context,
     )
     sources = build_sources(documents_with_scores)

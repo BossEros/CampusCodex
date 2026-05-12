@@ -60,6 +60,7 @@ def chat(request: ChatRequest) -> ChatResponse:
         result = answer_questions(
             vector_store=vector_store,
             question=request.question,
+            history=request.history,
         )
         return ChatResponse(**result)
     except ValueError as error:

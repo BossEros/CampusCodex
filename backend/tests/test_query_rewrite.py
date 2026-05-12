@@ -29,6 +29,31 @@ class QueryRewriteTests(unittest.TestCase):
 
         self.assertEqual("What are the requirements for shifting courses?", retrieval_query)
 
+    def test_rewrite_query_for_retrieval_includes_history_for_follow_up_questions(self):
+        from app.rag.query_transformer import rewrite_query_for_retrieval
+        from app.schemas.chat import ChatMessage
+
+        llm_provider = Mock()
+        llm_provider.rewrite_query.return_value = "What are the enrollment requirements?"
+        history = [
+            ChatMessage(role="user", content="Tell me about enrollment."),
+            ChatMessage(role="assistant", content="Here are the enrollment details."),
+        ]
+
+        with patch("app.rag.query_transformer.settings") as settings:
+            settings.enable_query_rewrite = True
+
+            with patch("app.rag.query_transformer.create_llm_provider", return_value=llm_provider):
+                retrieval_query = rewrite_query_for_retrieval("What about the requirements?", history=history)
+
+        llm_provider.rewrite_query.assert_called_once()
+        rewrite_input = llm_provider.rewrite_query.call_args.args[0]
+        self.assertIn("Conversation history:", rewrite_input)
+        self.assertIn("User: Tell me about enrollment.", rewrite_input)
+        self.assertIn("Assistant: Here are the enrollment details.", rewrite_input)
+        self.assertIn("Latest student message:\nWhat about the requirements?", rewrite_input)
+        self.assertEqual("What are the enrollment requirements?", retrieval_query)
+
     def test_answer_questions_retrieves_with_rewritten_query_and_answers_original_question(self):
         from app.rag import chat_service
 
@@ -45,10 +70,10 @@ class QueryRewriteTests(unittest.TestCase):
         retrieve.assert_called_once_with(
             vector_store=vector_store,
             retrieval_query="rewritten query",
-            reranking_question="original question",
+            reranking_question="rewritten query",
         )
         build_context.assert_called_once_with(retrieved_documents)
-        generate_answer.assert_called_once_with("original question", "context")
+        generate_answer.assert_called_once_with("rewritten query", "context")
         build_sources.assert_called_once_with(retrieved_documents)
         self.assertEqual({"answer": "answer", "sources": []}, result)
 

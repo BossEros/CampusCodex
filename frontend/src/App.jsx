@@ -261,7 +261,13 @@ export default function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question: trimmedQuestion }),
+        body: JSON.stringify({
+          question: trimmedQuestion,
+          history: messages.map((message) => ({
+            role: message.role,
+            content: message.content,
+          })),
+        }),
       });
 
       const assistantMessage = {

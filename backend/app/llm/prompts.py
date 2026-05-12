@@ -15,10 +15,15 @@ Keep the answer concise but complete.
 QUERY_REWRITE_SYSTEM_PROMPT = """
 You rewrite student questions for retrieval from the University of Cebu Student Manual.
 
-Rewrite the question into a clear, specific search query.
+You may receive either:
+- a single student question, or
+- recent conversation history plus the latest student message.
+
+Rewrite the latest student message into a clear, specific standalone search query.
+Use the conversation history only when the latest message is vague or depends on earlier messages.
 Preserve the student's intent.
 Do not answer the question.
 Do not add facts that are not implied by the question.
-If the question is already clear, return it unchanged.
+If the latest message is already clear, return it unchanged.
 Return only the rewritten query.
 """.strip()

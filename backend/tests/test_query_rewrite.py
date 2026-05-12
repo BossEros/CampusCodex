@@ -29,7 +29,7 @@ class QueryRewriteTests(unittest.TestCase):
 
         self.assertEqual("What are the requirements for shifting courses?", retrieval_query)
 
-    def test_rewrite_query_for_retrieval_includes_history_for_follow_up_questions(self):
+    def test_rewrite_query_for_retrieval_uses_last_user_question_for_follow_up_questions(self):
         from app.rag.query_transformer import rewrite_query_for_retrieval
         from app.schemas.chat import ChatMessage
 
@@ -38,6 +38,7 @@ class QueryRewriteTests(unittest.TestCase):
         history = [
             ChatMessage(role="user", content="Tell me about enrollment."),
             ChatMessage(role="assistant", content="Here are the enrollment details."),
+            ChatMessage(role="user", content="What about the schedule?"),
         ]
 
         with patch("app.rag.query_transformer.settings") as settings:
@@ -48,9 +49,10 @@ class QueryRewriteTests(unittest.TestCase):
 
         llm_provider.rewrite_query.assert_called_once()
         rewrite_input = llm_provider.rewrite_query.call_args.args[0]
-        self.assertIn("Conversation history:", rewrite_input)
-        self.assertIn("User: Tell me about enrollment.", rewrite_input)
-        self.assertIn("Assistant: Here are the enrollment details.", rewrite_input)
+        self.assertIn("Previous student question:", rewrite_input)
+        self.assertIn("What about the schedule?", rewrite_input)
+        self.assertNotIn("Tell me about enrollment.", rewrite_input)
+        self.assertNotIn("Here are the enrollment details.", rewrite_input)
         self.assertIn("Latest student message:\nWhat about the requirements?", rewrite_input)
         self.assertEqual("What are the enrollment requirements?", retrieval_query)
 

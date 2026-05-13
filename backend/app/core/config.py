@@ -9,8 +9,8 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     anthropic_api_key: str | None = None
     gemini_api_key: str | None = None
-    llm_provider: str = "anthropic"
-    llm_model_name: str = "claude-haiku-4-5"
+    llm_provider: str = "groq"
+    llm_model_name: str = "llama-3.1-8b-instant"
     embedding_model_name: str = "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
     faiss_index_path: str = str(PROJECT_ROOT / "data" / "indexes" / "faiss_student_manual")
     pdf_path: str = str(PROJECT_ROOT / "data" / "raw" / "student_manual_2019.pdf")

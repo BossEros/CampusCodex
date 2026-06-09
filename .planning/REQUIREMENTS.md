@@ -107,24 +107,58 @@ Explicitly excluded for this milestone. Documented to prevent scope creep and gi
 
 ## Traceability
 
-Populated during roadmap creation. Each v1 requirement maps to exactly one phase.
+Each v1 requirement maps to exactly one phase. See ROADMAP.md for phase details.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CORE-01..03 | TBD | Pending |
-| AUTH-01..05 | TBD | Pending |
-| RAG-01..07 | TBD | Pending |
-| DOC-01..06 | TBD | Pending |
-| CHAT-01..05 | TBD | Pending |
-| EVAL-01..04 | TBD | Pending |
-| OPS-01..07 | TBD | Pending |
-| SHIP-01..03 | TBD | Pending |
+| CORE-01 | Phase 1 | Pending |
+| CORE-02 | Phase 1 | Pending |
+| CORE-03 | Phase 1 | Pending |
+| OPS-07 | Phase 1 | Pending |
+| OPS-01 | Phase 2 | Pending |
+| AUTH-01 | Phase 3 | Pending |
+| AUTH-02 | Phase 3 | Pending |
+| AUTH-03 | Phase 3 | Pending |
+| AUTH-04 | Phase 3 | Pending |
+| AUTH-05 | Phase 3 | Pending |
+| RAG-01 | Phase 4 | Pending |
+| RAG-02 | Phase 4 | Pending |
+| RAG-03 | Phase 4 | Pending |
+| RAG-04 | Phase 4 | Pending |
+| RAG-05 | Phase 4 | Pending |
+| RAG-06 | Phase 4 | Pending |
+| RAG-07 | Phase 4 | Pending |
+| EVAL-01 | Phase 4 | Pending |
+| SHIP-01 | Phase 5 | Pending |
+| SHIP-02 | Phase 5 | Pending |
+| OPS-03 | Phase 5 | Pending |
+| DOC-01 | Phase 6 | Pending |
+| DOC-02 | Phase 6 | Pending |
+| DOC-03 | Phase 6 | Pending |
+| DOC-04 | Phase 6 | Pending |
+| DOC-05 | Phase 6 | Pending |
+| DOC-06 | Phase 6 | Pending |
+| CHAT-01 | Phase 7 | Pending |
+| CHAT-02 | Phase 7 | Pending |
+| CHAT-03 | Phase 7 | Pending |
+| CHAT-04 | Phase 7 | Pending |
+| CHAT-05 | Phase 7 | Pending |
+| EVAL-02 | Phase 8 | Pending |
+| EVAL-03 | Phase 8 | Pending |
+| EVAL-04 | Phase 8 | Pending |
+| OPS-02 | Phase 9 | Pending |
+| OPS-04 | Phase 9 | Pending |
+| OPS-05 | Phase 9 | Pending |
+| OPS-06 | Phase 9 | Pending |
+| SHIP-03 | Phase 9 | Pending |
 
 **Coverage:**
-- v1 requirements: 37 total
-- Mapped to phases: 0 (roadmap pending)
-- Unmapped: 37 ⚠️ (resolved by roadmapper)
+- v1 requirements: 40 total
+- Mapped to phases: 40 (100%)
+- Unmapped: 0
+
+> Note: PROJECT.md and the earlier draft of this file stated "37 total." The enumerated requirement IDs actually sum to **40** (CORE 3 + AUTH 5 + RAG 7 + DOC 6 + CHAT 5 + EVAL 4 + OPS 7 + SHIP 3). The "37" was a running subtotal through OPS that omitted SHIP-01..03. No requirements were dropped or added — all 40 enumerated IDs are mapped exactly once.
 
 ---
 *Requirements defined: 2026-06-10*
-*Last updated: 2026-06-10 after initial definition*
+*Last updated: 2026-06-10 after roadmap creation (traceability populated; count corrected 37→40)*

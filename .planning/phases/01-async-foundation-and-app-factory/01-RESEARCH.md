@@ -30,8 +30,9 @@ to a later phase).
 
 **Primary recommendation:** Use `create_app()` factory returning a configured `FastAPI` instance
 with an `async def lifespan` that builds the LLM provider and pre-warms the FAISS store and
-reranker, attaches them to `app.state`, and wraps the blocking `answer_questions` call in
-`asyncio.to_thread()` inside the now-`async def` route handler.
+reranker, attaches them to `app.state`, includes route handlers via an `APIRouter`, and wraps
+the blocking `answer_questions` call in `asyncio.to_thread()` inside the now-`async def` route
+handler.
 
 ---
 
@@ -131,40 +132,64 @@ FastAPI App (created by create_app())
   │     ├── load_faiss_vector_store()   → app.state.vector_store   [CORE-01]
   │     └── get_reranker_model()        → pre-warm only (getter stays in reranker.py)
   │
-  ├── async def chat(request, req: Request)
-  │     ├── reads  req.app.state.vector_store
-  │     ├── reads  req.app.state.llm_provider  (passed into pipeline)
-  │     └── await asyncio.to_thread(answer_questions, vector_store, llm_provider, question, history)
-  │                                                      ↑ blocking; runs in threadpool
+  ├── APIRouter (registered via include_router inside create_app())
+  │     ├── async def chat(request, req: Request)
+  │     │     ├── reads  req.app.state.vector_store
+  │     │     ├── reads  req.app.state.llm_provider  (passed into pipeline)
+  │     │     └── await asyncio.to_thread(answer_questions, ...)
+  │     │                                ↑ blocking; runs in threadpool
+  │     └── async def get_index_status(req: Request)
+  │           └── reads req.app.state.vector_store (bool check)
   │
-  └── async def get_index_status(req: Request)
-        └── reads req.app.state.vector_store (bool check)
+  └── Singleton thread-safety note: FAISS, CrossEncoder, and SDK HTTP clients
+        are designed for concurrent read access across threads — safe to share
+        across concurrent asyncio.to_thread() calls from the same process.
 ```
 
 ### Recommended Project Structure (changes only)
 
 ```
 backend/app/
-├── main.py                 # create_app() factory + lifespan (replaces top-level app = FastAPI())
+├── main.py                 # create_app() factory + lifespan + APIRouter registration
+│                           # (replaces top-level app = FastAPI() + global vector_store)
 ├── rag/
 │   ├── chat_service.py     # answer_questions() gains llm_provider param; generate_answer() too
-│   └── query_transformer.py  # rewrite_query_for_retrieval() gains llm_provider param
+│   ├── query_transformer.py  # rewrite_query_for_retrieval() gains llm_provider param
 │   └── vector_store.py     # remove module-level EMBEDDING_MODEL_NAME binding [CORE-03]
 └── llm/
     └── factory.py          # create_llm_provider() unchanged — still called once in lifespan
 ```
 
+> **APIRouter note:** Routes must be declared on an `APIRouter` instance and registered with
+> `application.include_router(router)` inside `create_app()`. Decorating routes directly on the
+> module-level `@app.post(...)` while using an `app = create_app()` pattern means a *different*
+> `FastAPI` instance owns the routes — `TestClient(create_app())` would return a fresh app with
+> lifespan but no routes, producing 404 on every endpoint. The `APIRouter` pattern avoids this.
+
 ### Pattern 1: App Factory + Lifespan Singletons
 
-**What:** `create_app()` function that defines lifespan, builds singletons, attaches to `app.state`, returns the configured `FastAPI` instance.
+**What:** `create_app()` function that defines lifespan, builds singletons, attaches to
+`app.state`, registers routes via `APIRouter`, and returns the configured `FastAPI` instance.
 
 **When to use:** Always. Enables testing via `with TestClient(create_app())` and clean DI.
+The `APIRouter` is the critical ingredient — without it, routes registered on the module-level
+`app` are unreachable from a fresh `create_app()` call in tests.
 
 **Example:**
 ```python
 # Source: https://fastapi.tiangolo.com/advanced/events/
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import APIRouter, FastAPI, Request
+
+router = APIRouter()
+
+@router.post("/api/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest, req: Request) -> ChatResponse:
+    ...  # see Pattern 2
+
+@router.get("/api/index/status")
+async def get_index_status(req: Request):
+    ...
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -179,7 +204,8 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     application = FastAPI(title="RAG Knowledge Platform", lifespan=lifespan)
-    # middleware, router includes here
+    application.include_router(router)     # routes are visible to every create_app() instance
+    # middleware added here
     return application
 
 app = create_app()
@@ -202,7 +228,8 @@ to `async def` without `asyncio.to_thread()` removes this protection and blocks 
 import asyncio
 from fastapi import Request
 
-@app.post("/api/chat", response_model=ChatResponse)
+# Route decorated on the module-level APIRouter, NOT on @app.post(...)
+@router.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest, req: Request) -> ChatResponse:
     vector_store = req.app.state.vector_store
     llm_provider = req.app.state.llm_provider
@@ -251,10 +278,8 @@ per-call `create_llm_provider()` invocations.
 | `rag/query_transformer.py` | `rewrite_query_for_retrieval()` | Add `llm_provider: LlmProvider` param; remove `create_llm_provider()` call |
 | `llm/factory.py` | `create_llm_provider()` | No change — still called once in lifespan |
 
-**Test impact:** `test_query_rewrite.py` patches `app.rag.query_transformer.create_llm_provider`
-(line 27, 47). After the refactor, `create_llm_provider` is no longer called inside
-`rewrite_query_for_retrieval()` — those patches will break or become no-ops. The tests must
-be updated to pass `llm_provider` directly to the refactored function signature.
+**Test impact:** Every call site to both refactored functions in the test suite must be updated.
+See "Existing Tests Impacted" table under Validation Architecture for the complete list.
 
 ### Pattern 5: CORE-03 Fix — Remove Module-Level Settings Binding
 
@@ -296,6 +321,11 @@ read settings values inside function bodies. Do not hunt for non-existent violat
   the current `main.py` lifespan is the anti-pattern — it makes the app untestable without
   side effects on the module. Move to `app.state.vector_store`.
 
+- **Decorating routes with `@app.post(...)` instead of `@router.post(...)`:** When `app` is
+  created by `create_app()`, routes decorated on the module-level `app` are not present on a
+  fresh `create_app()` call. `TestClient(create_app())` would produce 404 on every route.
+  Always declare routes on an `APIRouter` and register with `application.include_router(router)`.
+
 - **Migrating providers to async SDKs in this phase:** `AsyncAnthropic`, `AsyncGroq`, etc.
   require the `LlmProvider` Protocol to become async, which ripples to chat_service and every
   caller. This is scoped to Phase 7 (streaming). Do not change provider internals in Phase 1.
@@ -319,6 +349,11 @@ read settings values inside function bodies. Do not hunt for non-existent violat
 pattern for exactly this use case — a blocking ML/API pipeline wrapped in an async server.
 No third-party orchestration libraries are needed.
 
+**Thread-safety note:** The FAISS index, CrossEncoder model, and SDK HTTP clients (Anthropic,
+Groq, Google) are designed for concurrent read access across threads — it is safe to share
+these singletons from `app.state` across concurrent `asyncio.to_thread()` calls in the same
+process without additional locking.
+
 ---
 
 ## Common Pitfalls
@@ -340,25 +375,50 @@ The current `def` route is actually safer because FastAPI auto-dispatches it to 
 on `asyncio.to_thread`), or any direct call to `vector_store.similarity_search_with_score()`
 or LLM provider methods inside an `async def` without `to_thread`.
 
-### Pitfall 2: `test_query_rewrite.py` Patches a Call Site That No Longer Exists
+### Pitfall 2: Routes Decorated on Module-Level `app` Are Invisible to `TestClient(create_app())`
 
-**What goes wrong:** After removing `create_llm_provider()` from inside
-`rewrite_query_for_retrieval()`, the `patch("app.rag.query_transformer.create_llm_provider")`
-in tests becomes a no-op — the function is no longer called from that module. Tests pass
-trivially but no longer test what they claim to.
+**What goes wrong:** Routes are defined with `@app.post(...)` where `app = create_app()` is
+the module-level instance. When a test calls `TestClient(create_app())`, it gets a *new*
+`FastAPI` instance with lifespan and middleware but no routes — every request returns 404.
 
-**Why it happens:** The refactor changes the function signature to accept an `LlmProvider`
-argument rather than creating one internally.
+**Why it happens:** `create_app()` constructs a fresh `FastAPI` instance each call. Routes
+bound to the first instance are not on the second instance. The factory pattern only works
+correctly when routes are declared on a shared `APIRouter` and registered via
+`application.include_router(router)` inside `create_app()`.
 
-**How to avoid:** Update `test_query_rewrite.py` tests that use
-`patch("app.rag.query_transformer.create_llm_provider")` to instead pass a `Mock()` directly
-as the `llm_provider` parameter to `rewrite_query_for_retrieval()`.
+**How to avoid:** Declare all routes on a module-level `router = APIRouter()` instance.
+Register the router inside `create_app()` with `application.include_router(router)`.
 
-**Scope:** `test_query_rewrite.py` lines 27 and 47 are the specific locations. The other
-tests in that file (`test_rewrite_query_for_retrieval_returns_original_question_when_disabled`
-and the non-provider-calling tests) are unaffected.
+**Warning signs:** `TestClient(create_app())` returns 404 on all routes that appear to be
+defined. Routes are decorated with `@app.post(...)` rather than `@router.post(...)`.
 
-### Pitfall 3: Removing `EMBEDDING_MODEL_NAME` Constant Breaks Build Script
+### Pitfall 3: `test_query_rewrite.py` Patches a Call Site That No Longer Exists (and Misses All Real Call Sites)
+
+**What goes wrong:** The CORE-02 refactor changes two function signatures:
+- `rewrite_query_for_retrieval(question, ...)` gains `llm_provider: LlmProvider`
+- `answer_questions(vector_store, question, ...)` gains `llm_provider: LlmProvider`
+
+This breaks *every* call to these functions in the test suite — not just the two `patch` lines.
+
+Specific breakage in `test_query_rewrite.py`:
+- **Line 14:** `rewrite_query_for_retrieval(question)` — if `llm_provider` is non-optional, this `TypeError`s. (The `enable_query_rewrite = False` path never calls the provider, but the signature still requires the argument.)
+- **Lines 27, 47, 71-75:** `patch("app.rag.query_transformer.create_llm_provider", ...)` becomes a no-op — `create_llm_provider` is no longer imported or called inside `rewrite_query_for_retrieval()`. Tests pass trivially but assert nothing meaningful.
+- **Line 91:** `chat_service.answer_questions(vector_store, "original question")` — `TypeError` because `llm_provider` is missing from the call.
+
+**Why it happens:** The refactor changes both function signatures, and the call sites in tests
+were written against the old signatures. The patch lines are the most visible symptom, but the
+missing positional/keyword argument is the underlying cause.
+
+**How to avoid:** When updating `rewrite_query_for_retrieval` and `answer_questions` signatures,
+update *all* call sites in tests in the same task:
+1. Replace all `patch("...create_llm_provider", ...)` blocks with `llm_provider=Mock()` passed directly
+2. Add `llm_provider=Mock()` to all bare calls to `rewrite_query_for_retrieval(question)` (line 14)
+3. Add `llm_provider=Mock()` to the `answer_questions(vector_store, ...)` call (line 91)
+
+**Warning signs:** `TypeError: rewrite_query_for_retrieval() missing 1 required positional argument`
+or `TypeError: answer_questions() missing 1 required positional argument` in the test output.
+
+### Pitfall 4: Removing `EMBEDDING_MODEL_NAME` Constant Breaks Build Script
 
 **What goes wrong:** `build_index.py` or other scripts may import `EMBEDDING_MODEL_NAME`
 from `vector_store.py` directly if such an import exists.
@@ -369,7 +429,7 @@ removing the constant. In the current codebase, no external importer of that con
 
 **Warning signs:** `ImportError` on `build_index.py` run after the fix.
 
-### Pitfall 4: `get_index_status` Still References `vector_store` Module Global After Migration
+### Pitfall 5: `get_index_status` Still References `vector_store` Module Global After Migration
 
 **What goes wrong:** After moving `vector_store` to `app.state`, the `get_index_status` route
 still reads the module-level `vector_store = None` (now always `None`), reporting the index as
@@ -378,7 +438,7 @@ never loaded.
 **How to avoid:** Update `get_index_status` to read `req.app.state.vector_store`. This route
 also needs a `Request` parameter added and must become `async def`.
 
-### Pitfall 5: TestClient Not Used as Context Manager (Lifespan Skipped)
+### Pitfall 6: TestClient Not Used as Context Manager (Lifespan Skipped)
 
 **What goes wrong:** `client = TestClient(app)` without `with` skips the lifespan — `app.state`
 is never populated — and all routes that read singletons from `app.state` raise `AttributeError`.
@@ -391,12 +451,12 @@ phase. The context-manager form is the documented way to trigger lifespan.
 
 ## Code Examples
 
-### App Factory with Lifespan
+### App Factory with Lifespan and APIRouter
 
 ```python
 # Source: https://fastapi.tiangolo.com/advanced/events/ (official pattern, adapted)
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.llm.factory import create_llm_provider
@@ -404,6 +464,10 @@ from app.llm.provider import LlmProvider
 from app.rag.vector_store import load_faiss_vector_store
 from app.rag.reranker import get_reranker_model
 from app.schemas.chat import ChatRequest, ChatResponse
+
+# Declare routes on a shared router — not on @app.post(...) directly.
+# This is required so TestClient(create_app()) sees the routes.
+router = APIRouter()
 
 
 @asynccontextmanager
@@ -421,9 +485,16 @@ def create_app() -> FastAPI:
         title="RAG Knowledge Platform",
         lifespan=lifespan,
     )
+    application.include_router(router)   # routes visible to every create_app() instance
+    # CORS: narrow to explicit methods/headers (CONCERNS.md security recommendation).
+    # Move allowed_origins to settings.allowed_origins in this phase so deployment
+    # environments can override without touching source.
+    # NOTE: settings.allowed_origins is a new Settings field added in this phase.
+    # Default value: ["http://localhost:5173", "http://127.0.0.1:5173"]
+    # Phase-5 work: update to Vercel origin at deploy time.
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.allowed_origins,  # move from hardcoded list to settings
+        allow_origins=settings.allowed_origins,
         allow_credentials=False,
         allow_methods=["GET", "POST"],
         allow_headers=["Content-Type"],
@@ -439,7 +510,8 @@ app = create_app()
 ```python
 import asyncio
 
-@app.post("/api/chat", response_model=ChatResponse)
+# Note: @router.post, not @app.post — see App Factory note above.
+@router.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest, req: Request) -> ChatResponse:
     vector_store = req.app.state.vector_store
     llm_provider: LlmProvider = req.app.state.llm_provider
@@ -518,8 +590,9 @@ def test_chat_endpoint_returns_answer():
    settings keys with placeholder or default values. Low priority for correctness; improves
    onboarding.
 
-3. **CORS origins**: Currently hardcoded in `main.py`. Recommend moving to `settings.allowed_origins`
-   (new field with sensible default) to avoid environment-specific values in source.
+3. **CORS origins**: Currently hardcoded in `main.py`. Moving to `settings.allowed_origins`
+   (new `list[str]` field with default `["http://localhost:5173", "http://127.0.0.1:5173"]`)
+   is a low-risk change that removes a hardcoded value and sets up Phase 5 (deploy-time override).
 
 **OPS-07 summary:** The critical requirements (`.env` gitignored, `.env.example` committed with
 placeholders, no real secrets tracked) are already satisfied. Phase 1 work is verification +
@@ -552,11 +625,18 @@ minor completeness improvement, not a from-scratch setup.
 
 ### Existing Tests Impacted by Phase 1 Refactor
 
-| Test File | Impact | Action Required |
-|-----------|--------|-----------------|
-| `tests/test_query_rewrite.py` lines 27, 47 | Patches `create_llm_provider` inside `rewrite_query_for_retrieval` — no longer called there after CORE-02 refactor | Update to pass `llm_provider=Mock()` directly |
-| `tests/test_anthropic_provider.py` | Tests `create_llm_provider()` directly — unaffected by Phase 1 | No change |
-| `tests/test_gemini_provider.py` | Same — unaffected | No change |
+Both `rewrite_query_for_retrieval()` and `answer_questions()` gain a required `llm_provider`
+parameter. Every call site to either function in the test suite must be updated.
+
+| Test File | Line(s) | Impact | Action Required |
+|-----------|---------|--------|-----------------|
+| `tests/test_query_rewrite.py` | 14 | `rewrite_query_for_retrieval(question)` — `TypeError` if `llm_provider` is non-optional | Add `llm_provider=Mock()` arg |
+| `tests/test_query_rewrite.py` | 27 | `patch("...create_llm_provider", ...)` — no-op after refactor; `rewrite_query_for_retrieval("What about shifting?")` also missing new arg | Remove patch; add `llm_provider=Mock()` direct arg |
+| `tests/test_query_rewrite.py` | 47 | Same pattern as line 27 with history | Remove patch; add `llm_provider=Mock()` direct arg |
+| `tests/test_query_rewrite.py` | 71-75 | Same patch pattern; `rewrite_query_for_retrieval(...)` call missing new arg | Remove patch; add `llm_provider=Mock()` direct arg |
+| `tests/test_query_rewrite.py` | 91 | `answer_questions(vector_store, "original question")` — `TypeError`, `llm_provider` missing | Add `llm_provider=Mock()` to call |
+| `tests/test_anthropic_provider.py` | — | Tests `AnthropicLlmProvider` directly — unaffected | No change |
+| `tests/test_gemini_provider.py` | — | Same — unaffected | No change |
 
 ### Sampling Rate
 
@@ -568,7 +648,7 @@ minor completeness improvement, not a from-scratch setup.
 
 - [ ] `backend/pytest.ini` — no config file exists; test discovery path must be set
 - [ ] `backend/tests/test_app_factory.py` — new integration tests covering CORE-01, CORE-02, regression
-- [ ] Existing `test_query_rewrite.py` must be updated (not new — modification of existing file)
+- [ ] Existing `test_query_rewrite.py` must be updated (not new — modification of existing file; all 5 impacted call sites)
 
 ---
 
@@ -673,7 +753,7 @@ minor completeness improvement, not a from-scratch setup.
 - Standard stack: HIGH — no new packages; FastAPI 0.136.0 already installed and documented
 - Architecture: HIGH — app-factory + lifespan pattern is official FastAPI documented approach
 - Pitfalls: HIGH — derived from direct codebase analysis (exact line numbers identified), not inference
-- Test impact: HIGH — exact test file and line numbers identified
+- Test impact: HIGH — exact test file and line numbers identified; all call sites enumerated
 
 **Research date:** 2026-06-14
 **Valid until:** 2026-07-14 (stable FastAPI ecosystem; 30-day window safe)

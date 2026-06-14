@@ -28,7 +28,7 @@ PROJECT.md's Key Decision targets a live authed slice early (~phase 2–3) to de
 - [ ] **Phase 6: Multi-Document Ingestion & Admin Management** - Admin upload/list/delete/re-index with async ingestion and multi-doc retrieval
 - [ ] **Phase 7: Chat Persistence & SSE Streaming** - Saved per-user conversations plus token-by-token streamed answers
 - [ ] **Phase 8: RAGAS Evaluation Harness** - Repeatable measurable answer-quality scoring over the frozen benchmark, surfaced in the README
-- [ ] **Phase 9: Ops, CI/CD & Demo Polish** - Docker, GitHub Actions, test suite, error tracking, seeded demo, polished docs
+- [ ] **Phase 9: CI/CD & Demo Polish** - GitHub Actions, test suite, seeded demo, polished docs
 
 ## Phase Details
 
@@ -43,18 +43,22 @@ PROJECT.md's Key Decision targets a live authed slice early (~phase 2–3) to de
   3. Settings are read inside function/lifespan bodies — no settings value is bound at module import time
   4. The existing single-doc chat endpoint still answers correctly after the migration (no regression), running async
   5. `.env` is gitignored and a `.env.example` with placeholder values is committed; no real secret is tracked from the first commit of this milestone
-**Plans**: TBD
+**Plans:** 3 plans
 
-### Phase 2: Postgres Persistence & Structured Logging
-**Goal**: A Postgres-backed async persistence layer exists (users, conversations, messages, document metadata) with migrations and request-correlated JSON logging — the keystone everything multi-user depends on.
+Plans:
+- [ ] 01-01-PLAN.md — CORE-03 fix, OPS-07 audit, allowed_origins field, pytest.ini
+- [ ] 01-02-PLAN.md — App factory rewrite, provider injection, async routes, test suite
+- [ ] 01-03-PLAN.md — Live regression checkpoint (human verify)
+
+### Phase 2: Postgres Persistence
+**Goal**: A Postgres-backed async persistence layer exists (users, conversations, messages, document metadata) with migrations — the keystone everything multi-user depends on.
 **Mode:** mvp
 **Depends on**: Phase 1
-**Requirements**: OPS-01
+**Requirements**: *(schema foundation; no standalone OPS requirement — serves AUTH, CHAT, DOC)*
 **Success Criteria** (what must be TRUE):
   1. The app connects to Postgres via a lifespan-built async engine + `async_sessionmaker`; sessions are provided per-request via a dependency (never bound at import)
   2. Alembic migrations create the schema (users, conversations, messages, documents) and run cleanly from empty
   3. The async engine is configured for Neon's autosuspend (`pool_pre_ping=True`, conservative `pool_recycle`) so the first request after idle succeeds
-  4. Each request emits structured JSON logs carrying a request/correlation id across the API path
 **Plans**: TBD
 
 ### Phase 3: Auth & RBAC
@@ -134,17 +138,16 @@ PROJECT.md's Key Decision targets a live authed slice early (~phase 2–3) to de
   4. Eval results are surfaced in the README (report and/or badge) alongside judge model + date + corpus context
 **Plans**: TBD
 
-### Phase 9: Ops, CI/CD & Demo Polish
-**Goal**: The production story is complete and the demo is recruiter-ready — containerized, CI-gated, tested, error-tracked, with cold-start mitigation and polished docs that present the system for hiring managers.
+### Phase 9: CI/CD & Demo Polish
+**Goal**: The demo is recruiter-ready — CI-gated, tested, with cold-start mitigation and polished docs that present the system for hiring managers.
 **Mode:** mvp
 **Depends on**: Phase 8
-**Requirements**: OPS-02, OPS-04, OPS-05, OPS-06, SHIP-03
+**Requirements**: OPS-04, OPS-06, SHIP-03
 **Success Criteria** (what must be TRUE):
-  1. Docker + docker-compose run backend, frontend, and database locally with parity; the backend image is slim post-deletion
-  2. GitHub Actions runs lint + tests + build on PR (with a gitleaks secret scan) and deploys on merge to main
-  3. An automated pytest suite (unit + API integration) runs against a configured test database, including a concurrency check (no async loop blocking) and a cross-user authorization test
-  4. Error tracking (Sentry-style, sampled to protect free quota) captures backend errors, and the cold-start window shows a clear "waking up" state rather than an error
-  5. A polished README + architecture docs present the system for recruiters
+  1. GitHub Actions runs lint + tests + build on PR (with a gitleaks secret scan) and deploys on merge to main
+  2. An automated pytest suite (unit + API integration) runs against a configured test database, including a concurrency check (no async loop blocking) and a cross-user authorization test
+  3. The cold-start window shows a clear "waking up" state rather than an error
+  4. A polished README + architecture docs present the system for recruiters
 **Plans**: TBD
 
 ## Progress
@@ -154,7 +157,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Async Foundation & App Factory | 0/TBD | Not started | - |
+| 1. Async Foundation & App Factory | 0/3 | Not started | - |
 | 2. Postgres Persistence & Structured Logging | 0/TBD | Not started | - |
 | 3. Auth & RBAC | 0/TBD | Not started | - |
 | 4. Pinecone + Voyage Migration | 0/TBD | Not started | - |
@@ -162,4 +165,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. Multi-Document Ingestion & Admin Management | 0/TBD | Not started | - |
 | 7. Chat Persistence & SSE Streaming | 0/TBD | Not started | - |
 | 8. RAGAS Evaluation Harness | 0/TBD | Not started | - |
-| 9. Ops, CI/CD & Demo Polish | 0/TBD | Not started | - |
+| 9. CI/CD & Demo Polish | 0/TBD | Not started | - |

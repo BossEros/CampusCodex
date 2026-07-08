@@ -1,18 +1,15 @@
-from typing import TYPE_CHECKING
-
 from langchain_core.documents import Document
+
 from app.core.config import settings
-from app.rag.reranker import rerank_documents
 from app.llm.factory import create_llm_provider
 from app.rag.query_transformer import rewrite_query_for_retrieval
+from app.rag.reranker import rerank_documents
+from app.rag.vector_store import VectorStore
 from app.schemas.chat import ChatMessage
-
-if TYPE_CHECKING:
-    from langchain_community.vectorstores import FAISS
 
 
 def retrieve_relevant_chunks(
-    vector_store: "FAISS",
+    vector_store: VectorStore,
     retrieval_query: str,
     reranking_question: str,
 ) -> list[tuple[Document, float]]:
@@ -22,9 +19,9 @@ def retrieve_relevant_chunks(
     if not reranking_question.strip():
         raise ValueError("Reranking question must not be empty")
     
-    candidate_documents = vector_store.similarity_search_with_score(
-        retrieval_query,
-        k=settings.retrieval_candidate_k
+    candidate_documents = vector_store.search_similar_chunks(
+        query=retrieval_query,
+        limit=settings.retrieval_candidate_k,
     )
 
     return rerank_documents(
@@ -99,7 +96,7 @@ def build_sources(
     return sources
 
 def answer_questions(
-    vector_store: "FAISS",
+    vector_store: VectorStore,
     question: str,
     history: list[ChatMessage] | None = None,
 ) -> dict:

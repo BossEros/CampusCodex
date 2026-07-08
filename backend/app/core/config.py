@@ -9,15 +9,25 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     anthropic_api_key: str | None = None
     gemini_api_key: str | None = None
+    voyage_api_key: str | None = None
+    pinecone_api_key: str | None = None
     llm_provider: str = "groq"
+    embedding_provider: str = "huggingface"
+    reranker_provider: str = "cross_encoder"
     llm_model_name: str = "llama-3.1-8b-instant"
     embedding_model_name: str = "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
+    voyage_embedding_model_name: str = "voyage-3.5"
     faiss_index_path: str = str(PROJECT_ROOT / "data" / "indexes" / "faiss_student_manual")
+    pinecone_index_name: str = "campus-codex"
+    pinecone_shared_namespace: str = "shared_kb"
+    pinecone_benchmark_namespace: str = "benchmark"
     pdf_path: str = str(PROJECT_ROOT / "data" / "raw" / "student_manual_2019.pdf")
     retrieval_candidate_k: int = 15
     reranked_top_k: int = 5
     reranker_model_name: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
+    voyage_reranker_model_name: str = "rerank-2.5"
     enable_query_rewrite: bool = True
+    allowed_origins: list[str] = ["http://localhost:5173", "http://127.0."]
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIR / ".env",

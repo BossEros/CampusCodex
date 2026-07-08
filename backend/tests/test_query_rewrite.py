@@ -106,7 +106,7 @@ class QueryRewriteTests(unittest.TestCase):
         vector_store = Mock()
         candidate_documents = [("candidate", 0.25)]
         reranked_documents = [("candidate", 2.5)]
-        vector_store.similarity_search_with_score.return_value = candidate_documents
+        vector_store.search_similar_chunks.return_value = candidate_documents
 
         with patch.object(chat_service.settings, "retrieval_candidate_k", 15):
             with patch.object(chat_service.settings, "reranked_top_k", 5):
@@ -117,9 +117,9 @@ class QueryRewriteTests(unittest.TestCase):
                         reranking_question="What about shifting?",
                     )
 
-        vector_store.similarity_search_with_score.assert_called_once_with(
-            "requirements for shifting courses",
-            k=15,
+        vector_store.search_similar_chunks.assert_called_once_with(
+            query="requirements for shifting courses",
+            limit=15,
         )
         rerank.assert_called_once_with(
             question="What about shifting?",
@@ -127,6 +127,24 @@ class QueryRewriteTests(unittest.TestCase):
             top_k=5,
         )
         self.assertEqual(reranked_documents, result)
+
+    def test_load_faiss_vector_store_returns_adapter_with_search_interface(self):
+        from app.rag.vector_store import FaissVectorStoreAdapter, load_faiss_vector_store
+
+        faiss_store = Mock()
+        faiss_store.similarity_search_with_score.return_value = [("doc", 0.5)]
+
+        with patch("app.rag.vector_store.Path.exists", return_value=True):
+            with patch("app.rag.vector_store.create_embedding_model"):
+                with patch("app.rag.vector_store.FAISS.load_local", return_value=faiss_store):
+                    vector_store = load_faiss_vector_store("data/indexes/faiss_student_manual")
+
+        self.assertIsInstance(vector_store, FaissVectorStoreAdapter)
+        self.assertEqual(
+            [("doc", 0.5)],
+            vector_store.search_similar_chunks("requirements", 3),
+        )
+        faiss_store.similarity_search_with_score.assert_called_once_with("requirements", k=3)
 
 
 if __name__ == "__main__":

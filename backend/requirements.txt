@@ -9,6 +9,7 @@ langchain-text-splitters==1.1.2
 langchain-groq==1.1.2
 anthropic==0.97.0
 google-genai==1.74.0
+voyageai==0.4.1
 langchain-huggingface==1.2.1
 faiss-cpu==1.13.2
 sentence-transformers==5.4.1

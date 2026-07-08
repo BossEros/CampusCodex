@@ -59,7 +59,10 @@ Plans:
   1. The app connects to Postgres via a lifespan-built async engine + `async_sessionmaker`; sessions are provided per-request via a dependency (never bound at import)
   2. Alembic migrations create the schema (users, conversations, messages, documents) and run cleanly from empty
   3. The async engine is configured for Neon's autosuspend (`pool_pre_ping=True`, conservative `pool_recycle`) so the first request after idle succeeds
-**Plans**: TBD
+**Plans**: 1
+
+Plans:
+- [ ] 04-01-PLAN.md - Migration-first execution plan with Phase 0 baseline locked and Phases 1-5 sequenced
 
 ### Phase 3: Auth & RBAC
 **Goal**: Users can securely create accounts and sign in, sessions persist and can be revoked, and admin-only capabilities are enforced server-side at the dependency layer.

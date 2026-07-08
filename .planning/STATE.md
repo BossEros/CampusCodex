@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-06-10)
 Phase: 1 of 9 (Async Foundation & App Factory)
 Plan: 0 of TBD in current phase
 Status: Ready to plan
-Last activity: 2026-06-10 — Roadmap created (9 vertical-MVP phases, 40/40 requirements mapped)
+Last activity: 2026-07-08 — Phase 4 provider abstractions implemented; planner updated for Phase 3
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -45,14 +45,15 @@ Recent decisions affecting current work:
 - [Roadmap]: Migration (Phase 4) sequenced BEFORE the first hosted deploy (Phase 5). The deploy-early target moved from ~phase 2–3 to phase 5 so the first deploy runs on the slim API-based stack AND demos core value (cited RAG). Pre-accepted per hard constraint #5.
 - [Roadmap]: Eval namespace isolation (`benchmark` vs `shared_kb`) created at Pinecone index time in Phase 4 — exists before uploads ship in Phase 6, guaranteeing eval integrity.
 - [Roadmap]: Sync→async migration is Phase 1 (foundational); async DB and streaming both depend on it. Building sync-then-async is documented rework.
+- [Phase 4 baseline]: Phase 4 is locked as a retrieval migration only — Pinecone + Voyage + benchmark isolation + heavy dependency removal. Admin upload/list/delete/re-index remains deferred to Phase 6.
 
 ### Pending Todos
 
-None yet.
+- Phase 4 Plan 01 Phase 2 is complete; the next implementation slice is Phase 3 (Pinecone-backed runtime vector adapter).
 
 ### Blockers/Concerns
 
-- Requirement count: source docs stated "37 total" but enumerated IDs sum to 40 (SHIP-01..03 omitted from the original subtotal). All 40 are mapped; no requirements dropped. PROJECT.md still reads "37" in its prose — confirm at next milestone review.
+- Requirement count: 37 (OPS-01, OPS-02, OPS-05 removed 2026-06-14 as unnecessary complexity). PROJECT.md prose still reads "37" — now accurate by coincidence; confirm at next milestone review.
 - Pinecone index `dimension=1024` / `metric=cosine` is fixed at creation (Phase 4) — locking it wrong forces a full re-embed. No migration from the old 384-dim local vectors; the benchmark must be re-embedded.
 - Free-tier numbers (Pinecone RU/WU, Voyage tokens, Render cold start, Neon autosuspend) are MEDIUM confidence — re-verify at signup.
 - BackgroundTasks ingestion is coupled to the web dyno (Phase 6); a restart mid-ingest can leave a stuck `processing` row — acceptable for a demo, note in README.
@@ -67,6 +68,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-10
-Stopped at: ROADMAP.md and STATE.md written; REQUIREMENTS.md traceability updated (count corrected 37→40)
-Resume file: None
+Last session: 2026-07-08
+Stopped at: Phase 4 Plan 01 Phase 2 complete; provider abstractions and Voyage adapters added
+Resume file: `.planning/phases/04-pinecone-voyage-migration/04-01-PLAN.md`

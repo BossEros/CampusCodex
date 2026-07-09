@@ -6,3 +6,11 @@ node_modules/
 dist/
 data/indexes/
 data/cache/
+
+# Internal AI-workflow / planning docs (not for public repo)
+CLAUDE.md
+CONTEXT.md
+DEVELOPER_GUIDE.md
+PLAN.md
+.planning/
+docs/agents/

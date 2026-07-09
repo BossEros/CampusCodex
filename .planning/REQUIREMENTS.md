@@ -59,11 +59,8 @@ Requirements for this milestone. Each maps to a roadmap phase.
 
 ### Production Engineering (OPS)
 
-- [ ] **OPS-01**: Structured (JSON) logging with a request/correlation id across the API path
-- [ ] **OPS-02**: Error tracking integrated (Sentry-style capture)
 - [ ] **OPS-03**: Rate limiting / per-user daily cap protects the public demo (keyed on user id for authed, IP for anon)
 - [ ] **OPS-04**: Automated test suite (pytest: unit + API integration) with a configured runner and a test database
-- [ ] **OPS-05**: Docker + docker-compose for backend, frontend, and database
 - [ ] **OPS-06**: CI/CD via GitHub Actions (lint + test + build on PR; deploy on merge to main)
 - [ ] **OPS-07**: Secrets hygiene — no keys in the repo, `.gitignore` + `.env.example` correct from the first relevant commit
 
@@ -115,7 +112,6 @@ Each v1 requirement maps to exactly one phase. See ROADMAP.md for phase details.
 | CORE-02 | Phase 1 | Pending |
 | CORE-03 | Phase 1 | Pending |
 | OPS-07 | Phase 1 | Pending |
-| OPS-01 | Phase 2 | Pending |
 | AUTH-01 | Phase 3 | Pending |
 | AUTH-02 | Phase 3 | Pending |
 | AUTH-03 | Phase 3 | Pending |
@@ -146,18 +142,16 @@ Each v1 requirement maps to exactly one phase. See ROADMAP.md for phase details.
 | EVAL-02 | Phase 8 | Pending |
 | EVAL-03 | Phase 8 | Pending |
 | EVAL-04 | Phase 8 | Pending |
-| OPS-02 | Phase 9 | Pending |
 | OPS-04 | Phase 9 | Pending |
-| OPS-05 | Phase 9 | Pending |
 | OPS-06 | Phase 9 | Pending |
 | SHIP-03 | Phase 9 | Pending |
 
 **Coverage:**
-- v1 requirements: 40 total
-- Mapped to phases: 40 (100%)
+- v1 requirements: 37 total
+- Mapped to phases: 37 (100%)
 - Unmapped: 0
 
-> Note: PROJECT.md and the earlier draft of this file stated "37 total." The enumerated requirement IDs actually sum to **40** (CORE 3 + AUTH 5 + RAG 7 + DOC 6 + CHAT 5 + EVAL 4 + OPS 7 + SHIP 3). The "37" was a running subtotal through OPS that omitted SHIP-01..03. No requirements were dropped or added — all 40 enumerated IDs are mapped exactly once.
+> Note: OPS-01 (structured JSON logging), OPS-02 (Sentry error tracking), and OPS-05 (Docker + docker-compose) were removed on 2026-06-14 as unnecessary complexity for a portfolio demo. Final count is 37 (CORE 3 + AUTH 5 + RAG 7 + DOC 6 + CHAT 5 + EVAL 4 + OPS 4 + SHIP 3).
 
 ---
 *Requirements defined: 2026-06-10*

@@ -128,24 +128,6 @@ class QueryRewriteTests(unittest.TestCase):
         )
         self.assertEqual(reranked_documents, result)
 
-    def test_load_faiss_vector_store_returns_adapter_with_search_interface(self):
-        from app.rag.vector_store import FaissVectorStoreAdapter, load_faiss_vector_store
-
-        faiss_store = Mock()
-        faiss_store.similarity_search_with_score.return_value = [("doc", 0.5)]
-
-        with patch("app.rag.vector_store.Path.exists", return_value=True):
-            with patch("app.rag.vector_store.create_embedding_model"):
-                with patch("app.rag.vector_store.FAISS.load_local", return_value=faiss_store):
-                    vector_store = load_faiss_vector_store("data/indexes/faiss_student_manual")
-
-        self.assertIsInstance(vector_store, FaissVectorStoreAdapter)
-        self.assertEqual(
-            [("doc", 0.5)],
-            vector_store.search_similar_chunks("requirements", 3),
-        )
-        faiss_store.similarity_search_with_score.assert_called_once_with("requirements", k=3)
-
 
 if __name__ == "__main__":
     unittest.main()

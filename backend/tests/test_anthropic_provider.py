@@ -30,11 +30,14 @@ class AnthropicProviderTests(unittest.TestCase):
     def setUp(self):
         FakeAnthropicClient.messages = FakeMessagesClient()
         fake_anthropic_module = types.SimpleNamespace(Anthropic=FakeAnthropicClient)
-        self.anthropic_module_patch = patch.dict(sys.modules, {"anthropic": fake_anthropic_module})
-        self.anthropic_module_patch.start()
+        self._saved_anthropic = sys.modules.get("anthropic")
+        sys.modules["anthropic"] = fake_anthropic_module
 
     def tearDown(self):
-        self.anthropic_module_patch.stop()
+        if self._saved_anthropic is None:
+          sys.modules.pop("anthropic", None)
+        else:
+          sys.modules["anthropic"] = self._saved_anthropic
 
     def test_factory_creates_anthropic_provider_when_configured(self):
         from app.llm.anthropic_provider import AnthropicLlmProvider

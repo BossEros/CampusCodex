@@ -53,62 +53,25 @@ class FakeVoyageClient:
         )
 
 
-class FakeHuggingFaceEmbeddings:
-    def __init__(self, model_name: str) -> None:
-        self.model_name = model_name
-
-    def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        return [[float(len(text))] for text in texts]
-
-    def embed_query(self, text: str) -> list[float]:
-        return [float(len(text))]
-
-
-class FakeCrossEncoder:
-    def __init__(self, model_name: str) -> None:
-        self.model_name = model_name
-
-    def rank(self, question: str, documents: list[str], top_k: int):
-        return [
-            {"corpus_id": index, "score": float(top_k - index)}
-            for index, _ in enumerate(documents[:top_k])
-        ]
-
-
 class RetrievalProviderTests(unittest.TestCase):
     def setUp(self):
         self._saved_voyageai = sys.modules.get("voyageai")
-        self._saved_huggingface = sys.modules.get("langchain_huggingface")
-        self._saved_sentence_transformers = sys.modules.get("sentence_transformers")
-
         sys.modules["voyageai"] = types.SimpleNamespace(Client=FakeVoyageClient)
-        sys.modules["langchain_huggingface"] = types.SimpleNamespace(
-            HuggingFaceEmbeddings=FakeHuggingFaceEmbeddings
-        )
-        sys.modules["sentence_transformers"] = types.SimpleNamespace(
-            CrossEncoder=FakeCrossEncoder
-        )
 
     def tearDown(self):
-        for module_name, saved_module in (
-            ("voyageai", self._saved_voyageai),
-            ("langchain_huggingface", self._saved_huggingface),
-            ("sentence_transformers", self._saved_sentence_transformers),
-        ):
-            if saved_module is None:
-                sys.modules.pop(module_name, None)
-            else:
-                sys.modules[module_name] = saved_module
+        if self._saved_voyageai is None:
+            sys.modules.pop("voyageai", None)
+        else:
+            sys.modules["voyageai"] = self._saved_voyageai
 
-    def test_embedding_factory_creates_huggingface_provider_when_configured(self):
+    def test_embedding_factory_raises_for_unsupported_provider(self):
         from app.embeddings.factory import create_embedding_provider
-        from app.embeddings.huggingface_provider import HuggingFaceEmbeddingProvider
 
         with patch("app.embeddings.factory.settings") as settings:
-            settings.embedding_provider = "huggingface"
-            provider = create_embedding_provider()
+            settings.embedding_provider = "unsupported"
 
-        self.assertIsInstance(provider, HuggingFaceEmbeddingProvider)
+            with self.assertRaises(ValueError):
+                create_embedding_provider()
 
     def test_embedding_factory_creates_voyage_provider_when_configured(self):
         from app.embeddings.factory import create_embedding_provider
@@ -140,15 +103,14 @@ class RetrievalProviderTests(unittest.TestCase):
         self.assertEqual("document", provider._client.embed_calls[0]["input_type"])
         self.assertEqual("query", provider._client.embed_calls[1]["input_type"])
 
-    def test_reranker_factory_creates_cross_encoder_provider_when_configured(self):
-        from app.reranking.cross_encoder_provider import CrossEncoderRerankerProvider
+    def test_reranker_factory_raises_for_unsupported_provider(self):
         from app.reranking.factory import create_reranker_provider
 
         with patch("app.reranking.factory.settings") as settings:
-            settings.reranker_provider = "cross_encoder"
-            provider = create_reranker_provider()
+            settings.reranker_provider = "unsupported"
 
-        self.assertIsInstance(provider, CrossEncoderRerankerProvider)
+            with self.assertRaises(ValueError):
+                create_reranker_provider()
 
     def test_reranker_factory_creates_voyage_provider_when_configured(self):
         from app.reranking.factory import create_reranker_provider

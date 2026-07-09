@@ -22,6 +22,10 @@ class ChatRequest(BaseModel):
 class ChatSource(BaseModel):
     excerpt: str = Field(..., description="A short preview of the retrieve source chunk.")
     score: float = Field(..., description="The reranker relevance score.")
+    title: str | None = Field(
+        default=None,
+        description="Human-readable document title for the retrieved source chunk, when available."
+    )
     page_number: int | None = Field(
         default=None,
         description="One-based page number for the retrieved source chunk, when available."

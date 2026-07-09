@@ -12,19 +12,16 @@ class Settings(BaseSettings):
     voyage_api_key: str | None = None
     pinecone_api_key: str | None = None
     llm_provider: str = "groq"
-    embedding_provider: str = "huggingface"
-    reranker_provider: str = "cross_encoder"
+    embedding_provider: str = "voyage"
+    reranker_provider: str = "voyage"
     llm_model_name: str = "llama-3.1-8b-instant"
-    embedding_model_name: str = "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
     voyage_embedding_model_name: str = "voyage-3.5"
-    faiss_index_path: str = str(PROJECT_ROOT / "data" / "indexes" / "faiss_student_manual")
     pinecone_index_name: str = "campus-codex"
     pinecone_shared_namespace: str = "shared_kb"
     pinecone_benchmark_namespace: str = "benchmark"
     pdf_path: str = str(PROJECT_ROOT / "data" / "raw" / "student_manual_2019.pdf")
     retrieval_candidate_k: int = 15
     reranked_top_k: int = 5
-    reranker_model_name: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
     voyage_reranker_model_name: str = "rerank-2.5"
     enable_query_rewrite: bool = True
     allowed_origins: list[str] = ["http://localhost:5173", "http://127.0."]
@@ -34,7 +31,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
     )
 
-    @field_validator("faiss_index_path", "pdf_path", mode="before")
+    @field_validator("pdf_path", mode="before")
     @classmethod
     def resolve_project_relative_paths(cls, value: str) -> str:
         path = Path(value)

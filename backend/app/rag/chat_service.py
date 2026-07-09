@@ -88,6 +88,7 @@ def build_sources(
             {
                 "excerpt": excerpt,
                 "score": float(score),
+                "title": document.metadata.get("title"),
                 "page_number": get_display_page_number(document),
                 "source": document.metadata.get("source"),
             }

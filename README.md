@@ -3,7 +3,7 @@
 RAG chatbot for the University of Cebu Student Manual 2019 PDF.
 
 This project has two major parts:
-- `backend/`: FastAPI API, RAG pipeline, FAISS index loading, provider-based answer generation
+- `backend/`: FastAPI API, RAG pipeline, Pinecone-backed retrieval, provider-based answer generation
 - `frontend/`: React/Vite client for the chat UI
 
 ## Tech Stack
@@ -25,12 +25,13 @@ This project has two major parts:
 - LangChain
 - PDFPlumberLoader
 - RecursiveCharacterTextSplitter
-- HuggingFace Embeddings
-- FAISS
+- Pinecone (managed vector store)
+- Voyage AI (embeddings and reranking)
 - Groq API, Anthropic Claude API, or Gemini API
 
 ### Models
-- Embedding model: `sentence-transformers/multi-qa-MiniLM-L6-cos-v1`
+- Embedding model: `voyage-3.5`
+- Reranker model: `rerank-2.5`
 - Default chat model: `claude-haiku-4-5`
 
 ## Project Structure
@@ -47,13 +48,12 @@ RAG Project/
         vector_store.py
         chat_service.py
       schemas/chat.py
-      scripts/build_index.py
+      scripts/seed_pinecone_corpus.py
     requirements.txt
     .env.example
   frontend/
   data/
     raw/student_manual_2019.pdf
-    indexes/faiss_student_manual/
   README.md
   DEVELOPER_GUIDE.md
 ```
@@ -113,9 +113,9 @@ To use Groq instead, set `LLM_PROVIDER=groq`, provide `GROQ_API_KEY`, and choose
 
 Current backend settings are loaded from `backend/app/core/config.py`.
 
-## Build the FAISS Index
+## Seed the Pinecone Corpus
 
-Before running the API, build the local FAISS index from the student manual PDF.
+Before running the API against Pinecone, seed the student manual corpus into Pinecone.
 
 Expected PDF location:
 
@@ -126,17 +126,20 @@ data/raw/student_manual_2019.pdf
 From `backend/`:
 
 ```powershell
-python app/scripts/build_index.py
+python app/scripts/seed_pinecone_corpus.py
 ```
 
-Note: the `python app/scripts/build_index.py` command is the same on Linux/macOS when the venv is activated.
+Note: the `python app/scripts/seed_pinecone_corpus.py` command is the same on Linux/macOS when the venv is activated.
 
 What this does:
 - loads the PDF as page-level documents with page metadata
 - splits it into overlapping chunks
-- embeds the chunks
-- builds the FAISS index
-- saves it to `data/indexes/faiss_student_manual/`
+- embeds the chunks with the configured embedding provider (Voyage by default)
+- upserts the vectors into Pinecone
+
+By default it seeds **both** the `benchmark` namespace (the fixed eval corpus) and the `shared_kb` namespace (what `/api/chat` reads from), since this project currently has a single canonical corpus and no separate admin-uploaded content yet. Pass `--namespaces benchmark` or `--namespaces shared_kb` to seed only one.
+
+Required Pinecone/Voyage environment variables (see `backend/.env.example`): `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`, `PINECONE_SHARED_NAMESPACE`, `PINECONE_BENCHMARK_NAMESPACE`, `VOYAGE_API_KEY`, `VOYAGE_EMBEDDING_MODEL_NAME`, `VOYAGE_RERANKER_MODEL_NAME`. There is no local fallback — the backend requires a configured Pinecone index to start.
 
 ## Run the Backend
 
@@ -209,7 +212,7 @@ Response:
 - The PDF is loaded with `PDFPlumberLoader`, which returns page-level documents.
 - Page metadata is preserved through chunking and returned with retrieved sources when available.
 - Vague student questions can be rewritten for retrieval when `ENABLE_QUERY_REWRITE=true`.
-- FAISS retrieves candidate chunks first, then a CrossEncoder reranks the best sources.
-- The FAISS index is built offline and loaded once on backend startup.
+- Pinecone retrieves candidate chunks first, then Voyage reranks the best sources.
+- The Pinecone client is created once and the vector store is loaded once on backend startup.
 
 For architecture details and module responsibilities, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).

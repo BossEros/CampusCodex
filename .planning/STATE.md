@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-06-10)
 
 **Core value:** Trustworthy, source-cited answers from a managed document knowledge base — answer quality that is *measurably* good, served through a secure, deployable, real-world system.
-**Current focus:** Phase 1 — Async Foundation & App Factory
+**Current focus:** Phase 4 — Pinecone + Voyage Migration is complete. Phases 1–3 (Async Foundation, Postgres Persistence, Auth & RBAC) remain unstarted per the roadmap's original sequencing — **this divergence has not been resolved, only surfaced; confirm with the team whether Phases 1–3 were intentionally deferred or this state is simply stale.**
 
 ## Current Position
 
-Phase: 1 of 9 (Async Foundation & App Factory)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-07-08 — Phase 4 provider abstractions implemented; planner updated for Phase 3
+Phase: 4 of 9 (Pinecone + Voyage Migration) — **complete**, out of the roadmap's original sequence (Phases 1–3 not yet started)
+Plan: 1 of 1 in Phase 4 (`04-01-PLAN.md`), all 5 sub-phases complete
+Status: Phase 4 done; next step is either resuming Phases 1–3 in original order or proceeding to Phase 5 (First Hosted Authed Slice) — needs a decision, not assumed
+Last activity: 2026-07-09 — Phase 4 fully completed: Pinecone runtime cutover verified live (Phase 3), benchmark/shared_kb corpus seeded and 4 representative chat scenarios verified live (Phase 4), heavy local ML deps (faiss-cpu/sentence-transformers/torch/langchain-huggingface) removed and verified absent, docs swept clean of FAISS references (Phase 5)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] ~1/9 phases complete (Phase 4 only; Phases 1-3 still open)
 
 ## Performance Metrics
 
@@ -49,7 +49,8 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-- Phase 4 Plan 01 Phase 2 is complete; the next implementation slice is Phase 3 (Pinecone-backed runtime vector adapter).
+- Phase 4 (`04-01-PLAN.md`) is fully complete (Phases 0-5 of that plan). Decide next step: resume the roadmap's original order (Phase 1: Async Foundation & App Factory) or proceed directly to Phase 5 (First Hosted Authed Slice), which depends on Phase 4 and is now unblocked.
+- `GROQ_API_KEY` in `backend/.env` is a literal placeholder value (`your_groq_api_key_here`), not a real key — `LLM_PROVIDER=groq` will fail with `groq.AuthenticationError` until a real key is added. Discovered during Phase 4 live verification; not fixed since it's a credentials issue outside this migration's scope.
 
 ### Blockers/Concerns
 
@@ -68,6 +69,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-08
-Stopped at: Phase 4 Plan 01 Phase 2 complete; provider abstractions and Voyage adapters added
-Resume file: `.planning/phases/04-pinecone-voyage-migration/04-01-PLAN.md`
+Last session: 2026-07-09
+Stopped at: Phase 4 (`04-01-PLAN.md`) fully complete — all 5 sub-phases (seam, provider abstractions, Pinecone cutover, benchmark seeding, dependency cleanup) done and live-verified
+Resume file: `.planning/phases/04-pinecone-voyage-migration/04-01-PLAN.md` (reference only, not resumable — complete); next action is a roadmap-sequencing decision, not a specific file

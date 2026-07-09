@@ -23,7 +23,7 @@ PROJECT.md's Key Decision targets a live authed slice early (~phase 2–3) to de
 - [ ] **Phase 1: Async Foundation & App Factory** - Convert to async handlers + lifespan singletons, fixing both flagged anti-patterns
 - [ ] **Phase 2: Postgres Persistence & Structured Logging** - Async SQLAlchemy + Alembic + JSON logging foundation for all multi-user data
 - [ ] **Phase 3: Auth & RBAC** - JWT email/password auth with admin/user roles enforced at the dependency layer
-- [ ] **Phase 4: Pinecone + Voyage Migration** - Replace FAISS/local models with managed vectors + API embed/rerank; lock namespaces; delete heavy deps
+- [x] **Phase 4: Pinecone + Voyage Migration** - Replace FAISS/local models with managed vectors + API embed/rerank; lock namespaces; delete heavy deps
 - [ ] **Phase 5: First Hosted Authed Slice** - Real working cited RAG chat, authed, live on Render + Vercel + Neon
 - [ ] **Phase 6: Multi-Document Ingestion & Admin Management** - Admin upload/list/delete/re-index with async ingestion and multi-doc retrieval
 - [ ] **Phase 7: Chat Persistence & SSE Streaming** - Saved per-user conversations plus token-by-token streamed answers
@@ -83,12 +83,14 @@ Plans:
 **Depends on**: Phase 3
 **Requirements**: RAG-01, RAG-02, RAG-03, RAG-04, RAG-05, RAG-06, RAG-07, EVAL-01
 **Success Criteria** (what must be TRUE):
-  1. Queries are served from a Pinecone serverless index (1024-dim, cosine) using Voyage embeddings (`voyage-3.5`) and Voyage reranking (`rerank-2.5`); the two-stage retrieve→rerank pipeline is preserved
-  2. Answers still cite the source document title + page through the new pipeline
-  3. `faiss-cpu`, `sentence-transformers`, and `torch` are removed from the backend image (the free-tier hosting win)
-  4. Embedding-provider and reranker-provider abstractions exist, mirroring the `LlmProvider` Protocol + factory pattern, with sync Voyage calls wrapped in `asyncio.to_thread` (no event-loop blocking under concurrency)
-  5. Two Pinecone namespaces exist — a frozen `benchmark` (re-embedded `student_manual`) and `shared_kb` — created at index time; eval reads only `benchmark`
-**Plans**: TBD
+  1. [x] Queries are served from a Pinecone serverless index (1024-dim, cosine) using Voyage embeddings (`voyage-3.5`) and Voyage reranking (`rerank-2.5`); the two-stage retrieve→rerank pipeline is preserved
+  2. [x] Answers still cite the source document title + page through the new pipeline
+  3. [x] `faiss-cpu`, `sentence-transformers`, and `torch` are removed from the backend image (the free-tier hosting win) — verified by uninstalling all three (plus `langchain-huggingface`) from the environment and confirming the full test suite, a live server boot, `/api/index/status`, and `/api/chat` all still pass
+  4. [x] Embedding-provider and reranker-provider abstractions exist, mirroring the `LlmProvider` Protocol + factory pattern. **Intent met, mechanism deferred:** the `asyncio.to_thread` wrapping doesn't exist yet because route handlers are still synchronous `def` (Phase 1: Async Foundation & App Factory hasn't landed). FastAPI runs sync `def` handlers in its own thread pool, so there is no event-loop blocking today; wrapping sync Voyage calls in `asyncio.to_thread` has no async caller to serve until Phase 1 converts the routes, and adding it now would be premature/dead code.
+  5. [x] Two Pinecone namespaces exist — a frozen `benchmark` (re-embedded `student_manual`, 412 vectors) and `shared_kb` (412 vectors) — created at index time; eval reads only `benchmark`
+**Plans**: `.planning/phases/04-pinecone-voyage-migration/04-01-PLAN.md` (complete)
+
+**Note:** this phase was executed and completed ahead of Phases 1–3 below, which are still unstarted per this roadmap's checkboxes. See `.planning/STATE.md` for the current sequencing state — this was not silently reordered, just flagging that actual execution order diverged from the plan below.
 
 ### Phase 5: First Hosted Authed Slice
 **Goal**: A recruiter can open a public URL, log in, and get real source-cited RAG answers from the deployed system running on the slim API-based stack — the core value, live, with the public demo protected from cost/abuse.

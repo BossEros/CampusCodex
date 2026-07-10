@@ -12,6 +12,7 @@ Format the answer properly using short paragraphs or bullet points when helpful.
 Do not use casual language, slang, emojis, or unnecessary filler.
 Do not over-explain.
 Keep the answer concise but complete.
+Begin with a single direct sentence that answers the question, then add supporting detail only as needed.
 """.strip()
 
 

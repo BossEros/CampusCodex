@@ -89,6 +89,139 @@ class ReportTests(unittest.TestCase):
 
         self.assertIsNone(report["aggregate_scores"]["faithfulness"])
 
+    def test_build_report_excludes_out_of_scope_category_from_aggregate(self):
+        from app.eval.report import build_report
+
+        scored_samples = [
+            self._make_scored_sample(
+                "gq-001",
+                {
+                    "faithfulness": 1.0,
+                    "answer_relevancy": 0.8,
+                    "context_precision": 0.6,
+                    "context_recall": 0.4,
+                },
+                category="admissions",
+            ),
+            self._make_scored_sample(
+                "gq-002",
+                {
+                    "faithfulness": 0.6,
+                    "answer_relevancy": 0.4,
+                    "context_precision": 0.2,
+                    "context_recall": 0.8,
+                },
+                category="admissions",
+            ),
+            self._make_scored_sample(
+                "gq-020",
+                {
+                    "faithfulness": 0.0,
+                    "answer_relevancy": 0.0,
+                    "context_precision": 0.0,
+                    "context_recall": 1.0,
+                },
+                category="out-of-scope",
+            ),
+        ]
+
+        report = build_report(scored_samples, metadata={})
+
+        self.assertAlmostEqual(0.8, report["aggregate_scores"]["faithfulness"])
+        self.assertAlmostEqual(0.6, report["aggregate_scores"]["answer_relevancy"])
+        self.assertAlmostEqual(0.4, report["aggregate_scores"]["context_precision"])
+        self.assertAlmostEqual(0.6, report["aggregate_scores"]["context_recall"])
+
+    def test_build_report_surfaces_out_of_scope_sample_in_guardrail_scores(self):
+        from app.eval.report import build_report
+
+        scored_samples = [
+            self._make_scored_sample(
+                "gq-001",
+                {
+                    "faithfulness": 1.0,
+                    "answer_relevancy": 0.8,
+                    "context_precision": 0.6,
+                    "context_recall": 0.4,
+                },
+                category="admissions",
+            ),
+            self._make_scored_sample(
+                "gq-020",
+                {
+                    "faithfulness": 0.6,
+                    "answer_relevancy": 0.0,
+                    "context_precision": 0.0,
+                    "context_recall": 1.0,
+                },
+                category="out-of-scope",
+            ),
+        ]
+
+        report = build_report(scored_samples, metadata={})
+
+        self.assertEqual(1, len(report["guardrail_scores"]))
+        guardrail_entry = report["guardrail_scores"][0]
+        self.assertEqual("gq-020", guardrail_entry["id"])
+        self.assertEqual("out-of-scope", guardrail_entry["category"])
+        self.assertEqual("Question for gq-020", guardrail_entry["question"])
+        self.assertEqual(0.6, guardrail_entry["faithfulness"])
+        self.assertEqual(0.0, guardrail_entry["answer_relevancy"])
+        self.assertEqual(0.0, guardrail_entry["context_precision"])
+        self.assertEqual(1.0, guardrail_entry["context_recall"])
+
+    def test_build_report_guardrail_scores_empty_when_no_out_of_scope_sample(self):
+        from app.eval.report import build_report
+
+        scored_samples = [
+            self._make_scored_sample(
+                "gq-001",
+                {
+                    "faithfulness": 1.0,
+                    "answer_relevancy": 0.8,
+                    "context_precision": 0.6,
+                    "context_recall": 0.4,
+                },
+                category="admissions",
+            ),
+        ]
+
+        report = build_report(scored_samples, metadata={})
+
+        self.assertEqual([], report["guardrail_scores"])
+
+    def test_build_report_per_question_still_includes_out_of_scope_sample(self):
+        from app.eval.report import build_report
+
+        scored_samples = [
+            self._make_scored_sample(
+                "gq-001",
+                {
+                    "faithfulness": 1.0,
+                    "answer_relevancy": 0.8,
+                    "context_precision": 0.6,
+                    "context_recall": 0.4,
+                },
+                category="admissions",
+            ),
+            self._make_scored_sample(
+                "gq-020",
+                {
+                    "faithfulness": 0.6,
+                    "answer_relevancy": 0.0,
+                    "context_precision": 0.0,
+                    "context_recall": 1.0,
+                },
+                category="out-of-scope",
+            ),
+        ]
+
+        report = build_report(scored_samples, metadata={})
+
+        per_question_ids = [entry["id"] for entry in report["per_question"]]
+        self.assertIn("gq-020", per_question_ids)
+        self.assertEqual(2, len(report["per_question"]))
+
     def test_write_report_creates_parent_directories_and_valid_json(self):
         from app.eval.report import write_report
 

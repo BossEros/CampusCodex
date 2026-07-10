@@ -1,6 +1,8 @@
 from pathlib import Path
+from typing import Annotated
+
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 PROJECT_ROOT = BACKEND_DIR.parent
@@ -25,7 +27,10 @@ class Settings(BaseSettings):
     voyage_reranker_model_name: str = "rerank-2.5"
     enable_query_rewrite: bool = True
     eval_judge_model_name: str = "claude-haiku-4-5"
-    allowed_origins: list[str] = ["http://localhost:5173", "http://127.0."]
+    allowed_origins: Annotated[list[str], NoDecode] = [
+        "http://localhost:5173",
+        "http://127.0.",
+    ]
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_DIR / ".env",

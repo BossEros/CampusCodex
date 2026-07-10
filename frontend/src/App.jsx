@@ -151,12 +151,87 @@ async function fetchJson(path, options = {}) {
   return data;
 }
 
+function SparkleIcon({ size, className }) {
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M8 1L9.8 6.2L15 8L9.8 9.8L8 15L6.2 9.8L1 8L6.2 6.2L8 1Z" />
+    </svg>
+  );
+}
+
+function SendIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M8 13V3M8 3L3.5 7.5M8 3L12.5 7.5" />
+    </svg>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <div className="assistant-row typing-row">
+      <div className="assistant-avatar">
+        <SparkleIcon size={13} className="assistant-avatar-icon" />
+      </div>
+      <div className="typing-dots" role="status" aria-label="Assistant is typing">
+        <span className="typing-dot" />
+        <span className="typing-dot" />
+        <span className="typing-dot" />
+      </div>
+    </div>
+  );
+}
+
+function CitationChip({ message, source, index, openCitation, onToggle }) {
+  const isOpen =
+    openCitation?.messageId === message.id && openCitation?.sourceIndex === index;
+
+  return (
+    <span className="citation-chip-wrapper">
+      <button
+        type="button"
+        className={`citation-chip ${isOpen ? "active" : ""}`}
+        onClick={() => onToggle(message.id, index)}
+        aria-expanded={isOpen}
+        aria-label={`Citation ${index + 1}`}
+      >
+        {index + 1}
+      </button>
+      {isOpen ? (
+        <span className="citation-popover" role="tooltip">
+          <span className="citation-popover-title">{getSourceLabel(source, index)}</span>
+          <span className="citation-popover-meta">
+            {source.page_number ? `Page ${source.page_number} · ` : ""}
+            Score {Number(source.score).toFixed(3)}
+          </span>
+          <span className="citation-popover-excerpt">&ldquo;{source.excerpt}&rdquo;</span>
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 export default function App() {
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
-  const [activeSources, setActiveSources] = useState([]);
-  const [activeEvidenceMessageId, setActiveEvidenceMessageId] = useState("");
-  const [isEvidenceOpen, setIsEvidenceOpen] = useState(false);
+  const [openCitation, setOpenCitation] = useState(null);
   const [indexStatus, setIndexStatus] = useState(null);
   const [statusError, setStatusError] = useState("");
   const [chatError, setChatError] = useState("");
@@ -223,19 +298,13 @@ export default function App() {
     textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
   }, [question]);
 
-  function handleAssistantMessageClick(message) {
-    if (!message.sources?.length) {
-      return;
-    }
-
-    setActiveSources(message.sources);
-    setActiveEvidenceMessageId(message.id);
-    setIsEvidenceOpen(true);
-  }
-
-  function handleCloseEvidence() {
-    setIsEvidenceOpen(false);
-    setActiveEvidenceMessageId("");
+  function toggleCitation(messageId, sourceIndex) {
+    setOpenCitation((currentOpenCitation) =>
+      currentOpenCitation?.messageId === messageId &&
+      currentOpenCitation?.sourceIndex === sourceIndex
+        ? null
+        : { messageId, sourceIndex }
+    );
   }
 
   async function handleSubmit(submittedQuestion) {
@@ -252,6 +321,7 @@ export default function App() {
 
     setQuestion("");
     setChatError("");
+    setOpenCitation(null);
     setIsSending(true);
     setMessages((currentMessages) => [...currentMessages, userMessage]);
 
@@ -299,166 +369,118 @@ export default function App() {
     void handleSubmit(question);
   }
 
+  function getIndexStatusText() {
+    if (isLoadingStatus) {
+      return "Checking index...";
+    }
+
+    if (statusError || !indexStatus?.index_loaded) {
+      return "Index unavailable";
+    }
+
+    return "Index ready";
+  }
+
   return (
     <div className="app-shell">
-      <div className="backdrop backdrop-left" />
-      <div className="backdrop backdrop-right" />
+      <header className="app-header">
+        <div className="brand-mark">
+          <SparkleIcon size={14} />
+        </div>
+        <div className="brand-copy">
+          <p className="brand-wordmark">Nimbus</p>
+          <p className="brand-subtitle">Docs Assistant</p>
+        </div>
+        <p className="index-status-text">{getIndexStatusText()}</p>
+      </header>
 
-      <div className="layout">
-        <aside className="sidebar panel">
-          <div className="sidebar-section brand-block">
-            <p className="eyebrow">University of Cebu Knowledge Assistant</p>
-            <h1>Student Manual RAG Chatbot</h1>
-            <p className="hero-copy">
-              Ask policy questions, get grounded answers, and keep the full chat
-              flow in one focused workspace.
+      <div ref={messageListRef} className="message-list">
+        {messages.length === 0 ? (
+          <div className="empty-state">
+            <p className="empty-state-copy">
+              Ask a question about the indexed documents to get started.
             </p>
-          </div>
-        </aside>
-
-        <main className="main-column">
-          <section className="chat-stage">
-            {isEvidenceOpen ? (
-              <button
-                type="button"
-                className="evidence-backdrop"
-                aria-label="Close evidence panel"
-                onClick={handleCloseEvidence}
-              />
-            ) : null}
-
-            <div ref={messageListRef} className="message-list">
-              {messages.length === 0 ? (
-                <div className="quick-start-card">
-                  <p className="panel-kicker">Quick Start</p>
-                  <h3 className="quick-start-title">Try one of these questions</h3>
-                  <p className="quick-start-copy">
-                    Start with admissions, student services, discipline, or transfer
-                    policies.
-                  </p>
-                  <div className="starter-grid">
-                    {STARTER_QUESTIONS.map((starterQuestion) => (
-                      <button
-                        key={starterQuestion}
-                        type="button"
-                        className="starter-chip"
-                        onClick={() => void handleSubmit(starterQuestion)}
-                        disabled={isSending}
-                      >
-                        {starterQuestion}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                messages.map((message) => (
-                  <article
-                    key={message.id}
-                    className={`message-card ${message.role} ${
-                      message.id === activeEvidenceMessageId ? "active-evidence" : ""
-                    } ${message.role === "assistant" ? "interactive-message" : ""}`}
-                    onClick={() =>
-                      message.role === "assistant"
-                        ? handleAssistantMessageClick(message)
-                        : undefined
-                    }
-                  >
-                    <p className="message-role">
-                      {message.role === "user" ? "You" : "Assistant"}
-                    </p>
-                    {message.role === "assistant" ? (
-                      <FormattedMessage content={message.content} />
-                    ) : (
-                      <p className="message-content">{message.content}</p>
-                    )}
-                  </article>
-                ))
-              )}
-
-              {isSending ? (
-                <article className="message-card assistant loading-card">
-                  <p className="message-role">Assistant</p>
-                  <p className="message-content">Looking through the manual...</p>
-                </article>
-              ) : null}
-            </div>
-
-            {chatError ? <p className="banner error chat-banner">{chatError}</p> : null}
-
-            <div className="composer-dock">
-              <form className="composer" onSubmit={handleFormSubmit}>
-                <textarea
-                  id="question"
-                  ref={composerInputRef}
-                  className="composer-input"
-                  value={question}
-                  onChange={(event) => setQuestion(event.target.value)}
-                  onKeyDown={handleComposerKeyDown}
-                  placeholder="Example: What documents does a transferee need to submit?"
-                  rows={1}
-                  disabled={isSending}
-                />
-                <div className="composer-actions">
-                  <button
-                    type="submit"
-                    className="submit-button"
-                    disabled={isSending || !question.trim()}
-                  >
-                    {isSending ? "Sending..." : "Send"}
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            <aside className={`evidence-drawer ${isEvidenceOpen ? "open" : ""}`}>
-              <div className="evidence-drawer-header">
-                <div>
-                  <p className="panel-kicker">Evidence</p>
-                  <h3 className="evidence-title">Retrieved supporting excerpts</h3>
-                </div>
+            <div className="starter-chip-list">
+              {STARTER_QUESTIONS.map((starterQuestion) => (
                 <button
+                  key={starterQuestion}
                   type="button"
-                  className="evidence-close"
-                  aria-label="Close evidence panel"
-                  onClick={handleCloseEvidence}
+                  className="starter-chip"
+                  onClick={() => void handleSubmit(starterQuestion)}
+                  disabled={isSending}
                 >
-                  Close
+                  {starterQuestion}
                 </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          messages.map((message) =>
+            message.role === "user" ? (
+              <div key={message.id} className="message-row user-row">
+                <p className="user-bubble">{message.content}</p>
               </div>
-
-              {activeSources.length > 0 ? (
-                <>
-                  <p className="evidence-note">
-                    This panel shows the retrieved chunks behind the selected
-                    assistant response.
-                  </p>
-                  <div className="evidence-list">
-                    {activeSources.map((source, index) => (
-                      <article key={`${source.excerpt}-${index}`} className="evidence-card">
-                        <div className="evidence-meta">
-                          <span className="status-label">
-                            {getSourceLabel(source, index)}
-                          </span>
-                          <span className="evidence-score">
-                            Score {Number(source.score).toFixed(3)}
-                          </span>
-                        </div>
-                        <p className="evidence-excerpt">{source.excerpt}</p>
-                      </article>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="evidence-empty">
-                  <p className="empty-title">No evidence selected yet.</p>
-                  <p className="empty-copy">
-                    Click an assistant response to open its retrieved excerpts here.
-                  </p>
+            ) : (
+              <div key={message.id} className="message-row assistant-row">
+                <div className="assistant-avatar">
+                  <SparkleIcon size={13} className="assistant-avatar-icon" />
                 </div>
-              )}
-            </aside>
-          </section>
-        </main>
+                <div className="assistant-content">
+                  <FormattedMessage content={message.content} />
+                  {message.sources?.length ? (
+                    <span className="citation-chip-list">
+                      {message.sources.map((source, index) => (
+                        <CitationChip
+                          key={`${message.id}-source-${index}`}
+                          message={message}
+                          source={source}
+                          index={index}
+                          openCitation={openCitation}
+                          onToggle={toggleCitation}
+                        />
+                      ))}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            )
+          )
+        )}
+
+        {isSending ? <TypingIndicator /> : null}
+      </div>
+
+      {statusError ? <p className="banner error status-banner">{statusError}</p> : null}
+      {chatError ? <p className="banner error chat-banner">{chatError}</p> : null}
+
+      <div className="composer-dock">
+        <form className="composer" onSubmit={handleFormSubmit}>
+          <div className="composer-pill">
+            <textarea
+              id="question"
+              ref={composerInputRef}
+              className="composer-input"
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+              onKeyDown={handleComposerKeyDown}
+              placeholder="Example: What documents does a transferee need to submit?"
+              rows={1}
+              disabled={isSending}
+            />
+            <button
+              type="submit"
+              className="send-button"
+              disabled={isSending || !question.trim()}
+              aria-label="Send message"
+            >
+              <SendIcon />
+            </button>
+          </div>
+          <p className="composer-hint">
+            Answers are grounded in indexed internal docs. Click a citation number
+            for its source.
+          </p>
+        </form>
       </div>
     </div>
   );

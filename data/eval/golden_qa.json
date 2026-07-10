@@ -1,0 +1,122 @@
+[
+  {
+    "id": "gq-001",
+    "category": "admissions",
+    "question": "What documents must a new student submit at the time of enrollment?",
+    "reference_answer": "At the time of enrollment, a new student must submit their high school report card (Form 138) duly certified by the principal, their NSO birth certificate, and their Certificate of Good Moral Character from their principal or guidance counselor."
+  },
+  {
+    "id": "gq-002",
+    "category": "admissions",
+    "question": "What are the academic requirements for a transferee to be admitted to the University?",
+    "reference_answer": "A transferee should have at least 30 units left to complete, a grade point average (GPA) of at least 2.5 in all subjects already taken, and no more than 2 failures. They should also have at least one year of residence in the University prior to graduation. A department may give a validating examination to a transferee whose GPA is below 2.5."
+  },
+  {
+    "id": "gq-003",
+    "category": "admissions",
+    "question": "What credentials must a transfer student submit at enrollment?",
+    "reference_answer": "A transferee must submit a Certificate of transfer credential from the school last attended; a statement of good moral character signed by an adviser and certified by the school dean/head and/or the student affairs director; and an informative copy of their Transcript of Records (TOR) that includes the descriptive titles of subjects taken, the number of units, and the grades earned."
+  },
+  {
+    "id": "gq-004",
+    "category": "retention",
+    "question": "What happens if a student fails one-third of their enrolled units in a semester?",
+    "reference_answer": "If in any one semester or summer session a student fails in one-third of the units for which they are registered, they may not enroll in the same program without the written recommendation of the college Dean. If the student fails a second time, they may enroll in another program if accepted by the Dean of the new program. If the student fails in a similar manner for the third time, they shall be disqualified from registration in the University."
+  },
+  {
+    "id": "gq-005",
+    "category": "shifting",
+    "question": "Who are considered shifting students?",
+    "reference_answer": "Shifting students are those who were previously enrolled in a program and wished to take up another program within the University. For their admission to the different colleges, they must refer to the program-specific requirements."
+  },
+  {
+    "id": "gq-006",
+    "category": "admissions",
+    "question": "How much is the acceptance fee for foreign student applicants, and what does it cover?",
+    "reference_answer": "The acceptance fee is a remittance of US$120.00. It covers the issuance of the Notice of Acceptance (NOA), and the handling and mailing of the required documents (for applicants abroad, to the Philippine Department of Foreign Affairs and mailing of a copy of the NOA to the applicant; for those already in the Philippines, to the Bureau of Immigration in Manila)."
+  },
+  {
+    "id": "gq-007",
+    "category": "admissions",
+    "question": "What conditions must special students agree to when they are admitted?",
+    "reference_answer": "Special students may be admitted at any time provided that they receive approval from the Dean and/or department Chairperson for each course they intend to participate in; they sign an agreement waiving the right to receive and demand credit for the work done; and they pay the fees in full at the time of enrollment. Special students are not eligible for any honors or privileges."
+  },
+  {
+    "id": "gq-008",
+    "category": "enrollment",
+    "question": "Can a student enroll by proxy or without submitting credentials?",
+    "reference_answer": "No. Every prospective student must enroll during the prescribed registration period. No enrollment is possible without the necessary credentials, and enrollment by proxy is not allowed."
+  },
+  {
+    "id": "gq-009",
+    "category": "enrollment",
+    "question": "What is the rule on cross enrollment or enrolling in two schools at the same time?",
+    "reference_answer": "No student may enroll simultaneously in two schools without the prior approval of the University Registrar. Violation of this rule may cancel the student's right to credit for work done in either school or both. The Registrar issues the Permit to Cross Enrollment only upon the recommendation of the Dean concerned, only if the applicant is a candidate for graduation during the school year and the course is not offered that year or is in conflict with other subjects."
+  },
+  {
+    "id": "gq-010",
+    "category": "attendance",
+    "question": "What is the maximum number of absences allowed in a class?",
+    "reference_answer": "The maximum number of permitted absences should not exceed 20% of the prescribed number of class periods for the course, that is, 10 absences from either a 3-unit lecture course or a 1-unit laboratory course. Excellence in the performance of the student may, however, be given consideration upon approval of the Dean or Chairperson of the college."
+  },
+  {
+    "id": "gq-011",
+    "category": "attendance",
+    "question": "How many absences lead to an automatic failing grade under the cut system?",
+    "reference_answer": "Under the cut system, a student is allowed a limited number of absences equal to three times the number of class meetings a week, plus one. If a student incurs more cuts than allowed, they receive an automatic failure grade of 5.0. Absence due to late registration is considered a cut."
+  },
+  {
+    "id": "gq-012",
+    "category": "attendance",
+    "question": "When is a student considered late versus absent, and how does tardiness relate to cuts?",
+    "reference_answer": "A student who comes into the classroom 15 minutes after the second bell has rung is considered late. A student who comes in after the fifteenth minute is considered absent. A student who accumulates three instances of tardiness will be given one cut."
+  },
+  {
+    "id": "gq-013",
+    "category": "grading",
+    "question": "What is the passing grade and its numeric equivalent?",
+    "reference_answer": "The passing grade is 3.0, which is equivalent to a score of 75. A final grade below 3.0 is marked as 5.0 (Failed). The final grade shall only be Passed or Failed, with no conditional grade allowed."
+  },
+  {
+    "id": "gq-014",
+    "category": "grading",
+    "question": "How is a student's grade in a subject divided between class standing and examinations?",
+    "reference_answer": "Two-thirds (2/3) of the student's grade per subject consists of their class standing, while one-third (1/3) consists of their major examinations."
+  },
+  {
+    "id": "gq-015",
+    "category": "grading",
+    "question": "How is the Grade Point Average (GPA) computed, and are PE and NSTP grades included?",
+    "reference_answer": "The GPA is computed by multiplying the grade point value on each subject by the number of units in the course, adding these products, and dividing the result by the total number of units taken during the periodic term or year. PE and NSTP grades are not included when computing the GPA."
+  },
+  {
+    "id": "gq-016",
+    "category": "honors",
+    "question": "What GPA is required for Summa Cum Laude, Magna Cum Laude, and Cum Laude in baccalaureate courses?",
+    "reference_answer": "For baccalaureate courses, Summa Cum Laude requires a GPA of 1.00 to 1.20 with no grade below 2.00; Magna Cum Laude requires 1.21 to 1.45 with no grade below 2.30; and Cum Laude requires 1.46 to 1.70 with no grade below 2.50."
+  },
+  {
+    "id": "gq-017",
+    "category": "honors",
+    "question": "What marks disqualify a student from graduating with honors, and what is the minimum unit load required?",
+    "reference_answer": "A candidate for honors must not have a 5.0, DR, or INC mark throughout the entire curricular program. The candidate must also have carried at least a minimum of 18 units per semester, though they may be allowed fewer than 18 units during the last semester if they had previously enrolled in more than the minimum 18 units per semester."
+  },
+  {
+    "id": "gq-018",
+    "category": "honors",
+    "question": "What is the residency requirement for a baccalaureate degree candidate to graduate with honors?",
+    "reference_answer": "At the end of graduation, a candidate for honors in a baccalaureate degree must have a residency of at least two successive years or four successive semesters. For an associate course, the requirement is one year or two successive semesters. Two summers of nine maximum units per summer count as one semester."
+  },
+  {
+    "id": "gq-019",
+    "category": "uniform",
+    "question": "Who qualifies for a uniform exemption?",
+    "reference_answer": "The following qualify for a uniform exemption: pregnant women; married students; students who are legitimately working with entities, firms, or establishments not owned by the applicant's family or relatives; students over 35 years of age; cross-enrollees; second coursers; and special cases. The exemption must be sought from the Student Affairs Office (SAO) at the start of class."
+  },
+  {
+    "id": "gq-020",
+    "category": "out-of-scope",
+    "question": "What is the capital of France?",
+    "reference_answer": "The student manual does not contain this information. It covers University policies, procedures, and student services, not general geography, so this question is outside its scope."
+  }
+]

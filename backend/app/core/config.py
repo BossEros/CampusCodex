@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     reranked_top_k: int = 5
     voyage_reranker_model_name: str = "rerank-2.5"
     enable_query_rewrite: bool = True
+    eval_judge_model_name: str = "claude-haiku-4-5"
     allowed_origins: list[str] = ["http://localhost:5173", "http://127.0."]
 
     model_config = SettingsConfigDict(

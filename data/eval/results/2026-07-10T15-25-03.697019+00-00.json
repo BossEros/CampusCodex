@@ -1,0 +1,199 @@
+{
+  "metadata": {
+    "judge_llm_provider": "anthropic",
+    "judge_llm_model": "claude-haiku-4-5",
+    "embedding_model": "voyage-3.5",
+    "pinecone_index": "campus-codex",
+    "pinecone_namespace": "benchmark",
+    "run_at_utc": "2026-07-10T15:25:03.697019+00:00",
+    "golden_set_size": 20
+  },
+  "aggregate_scores": {
+    "faithfulness": 0.8760714285714286,
+    "answer_relevancy": 0.48123286622309563,
+    "context_precision": 0.8277777777103935,
+    "context_recall": 0.9833333333333334
+  },
+  "per_question": [
+    {
+      "id": "gq-001",
+      "category": "admissions",
+      "question": "What documents must a new student submit at the time of enrollment?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5413116092101188,
+      "context_precision": 0.9999999999,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-002",
+      "category": "admissions",
+      "question": "What are the academic requirements for a transferee to be admitted to the University?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.52731730657409,
+      "context_precision": 0.0,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-003",
+      "category": "admissions",
+      "question": "What credentials must a transfer student submit at enrollment?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5762031950820723,
+      "context_precision": 0.99999999995,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-004",
+      "category": "retention",
+      "question": "What happens if a student fails one-third of their enrolled units in a semester?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5980440101084298,
+      "context_precision": 0.7499999999625,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-005",
+      "category": "shifting",
+      "question": "Who are considered shifting students?",
+      "faithfulness": 0.8,
+      "answer_relevancy": 0.5132380403282829,
+      "context_precision": 0.9999999999,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-006",
+      "category": "admissions",
+      "question": "How much is the acceptance fee for foreign student applicants, and what does it cover?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5412166747625015,
+      "context_precision": 0.9999999999666667,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-007",
+      "category": "admissions",
+      "question": "What conditions must special students agree to when they are admitted?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.42619417762721107,
+      "context_precision": 0.9999999999,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-008",
+      "category": "enrollment",
+      "question": "Can a student enroll by proxy or without submitting credentials?",
+      "faithfulness": 0.75,
+      "answer_relevancy": 0.5818534544344122,
+      "context_precision": 0.99999999995,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-009",
+      "category": "enrollment",
+      "question": "What is the rule on cross enrollment or enrolling in two schools at the same time?",
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.4721530690035505,
+      "context_precision": 0.9999999999,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-010",
+      "category": "attendance",
+      "question": "What is the maximum number of absences allowed in a class?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5347197736079758,
+      "context_precision": 0.8055555555287036,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-011",
+      "category": "attendance",
+      "question": "How many absences lead to an automatic failing grade under the cut system?",
+      "faithfulness": 0.8571428571428571,
+      "answer_relevancy": 0.48247443875772134,
+      "context_precision": 0.9999999999,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-012",
+      "category": "attendance",
+      "question": "When is a student considered late versus absent, and how does tardiness relate to cuts?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.49910078263173707,
+      "context_precision": 0.9999999999,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-013",
+      "category": "grading",
+      "question": "What is the passing grade and its numeric equivalent?",
+      "faithfulness": 0.8,
+      "answer_relevancy": 0.5484916216338597,
+      "context_precision": 0.9999999999,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-014",
+      "category": "grading",
+      "question": "How is a student's grade in a subject divided between class standing and examinations?",
+      "faithfulness": 0.7142857142857143,
+      "answer_relevancy": 0.4705347495326486,
+      "context_precision": 0.9999999999,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-015",
+      "category": "grading",
+      "question": "How is the Grade Point Average (GPA) computed, and are PE and NSTP grades included?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.45244768265532587,
+      "context_precision": 0.9999999999,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-016",
+      "category": "honors",
+      "question": "What GPA is required for Summa Cum Laude, Magna Cum Laude, and Cum Laude in baccalaureate courses?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.5040960255870499,
+      "context_precision": 0.99999999995,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-017",
+      "category": "honors",
+      "question": "What marks disqualify a student from graduating with honors, and what is the minimum unit load required?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.4430348044877979,
+      "context_precision": 0.0,
+      "context_recall": 0.6666666666666666
+    },
+    {
+      "id": "gq-018",
+      "category": "honors",
+      "question": "What is the residency requirement for a baccalaureate degree candidate to graduate with honors?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.4963485819179156,
+      "context_precision": 0.9999999999,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-019",
+      "category": "uniform",
+      "question": "Who qualifies for a uniform exemption?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.41587732651921194,
+      "context_precision": 0.9999999999,
+      "context_recall": 1.0
+    },
+    {
+      "id": "gq-020",
+      "category": "out-of-scope",
+      "question": "What is the capital of France?",
+      "faithfulness": 0.6,
+      "answer_relevancy": 0.0,
+      "context_precision": 0.0,
+      "context_recall": 1.0
+    }
+  ]
+}

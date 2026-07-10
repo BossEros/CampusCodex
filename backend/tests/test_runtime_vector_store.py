@@ -65,6 +65,20 @@ class RuntimeVectorStoreTests(unittest.TestCase):
         self.assertIsInstance(vector_store, PineconeVectorStoreAdapter)
         self.assertEqual(["campus-codex"], pinecone_client.index_calls)
 
+    def test_load_pinecone_vector_store_accepts_namespace_override(self):
+        from app.rag.vector_store import load_pinecone_vector_store
+
+        pinecone_client = FakePineconeClient(api_key="pinecone-key")
+
+        with patch("app.rag.vector_store.settings") as settings:
+            settings.pinecone_index_name = "campus-codex"
+            settings.pinecone_shared_namespace = "shared_kb"
+
+            with patch("app.rag.vector_store.create_embedding_provider", return_value=Mock()):
+                vector_store = load_pinecone_vector_store(pinecone_client, namespace="benchmark")
+
+        self.assertEqual("benchmark", vector_store.runtime_details.namespace)
+
     def test_pinecone_vector_store_adapter_uses_shared_namespace_and_maps_metadata(self):
         from app.rag.vector_store import PineconeVectorStoreAdapter
 

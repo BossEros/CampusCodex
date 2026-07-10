@@ -6,6 +6,9 @@ node_modules/
 dist/
 data/indexes/
 data/cache/
+# Eval run outputs are dev-local by default; explicitly `git add -f` the one
+# result file the README's "Measured Answer Quality" section references.
+data/eval/results/
 
 # Internal AI-workflow / planning docs (not for public repo)
 CLAUDE.md

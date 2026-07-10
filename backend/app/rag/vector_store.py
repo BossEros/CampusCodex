@@ -73,14 +73,15 @@ def create_pinecone_client() -> Any:
     return Pinecone(api_key=settings.pinecone_api_key)
 
 
-def load_pinecone_vector_store(pinecone_client: Any) -> VectorStore:
+def load_pinecone_vector_store(pinecone_client: Any, namespace: str | None = None) -> VectorStore:
     if not settings.pinecone_index_name:
         raise ValueError("Pinecone index name is required for Pinecone runtime retrieval")
 
+    resolved_namespace = namespace if namespace is not None else settings.pinecone_shared_namespace
     index_client = pinecone_client.Index(settings.pinecone_index_name)
     return PineconeVectorStoreAdapter(
         index_client=index_client,
-        namespace=settings.pinecone_shared_namespace,
+        namespace=resolved_namespace,
         index_name=settings.pinecone_index_name,
     )
 

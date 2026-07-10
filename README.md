@@ -13,6 +13,7 @@ Most RAG demos hardcode a local vector index and a single LLM call. This project
 - **Provider-agnostic architecture** — LLM, embedding, and reranker providers are each behind a `Protocol` + factory, selected purely by config (`LLM_PROVIDER`, `EMBEDDING_PROVIDER`, `RERANKER_PROVIDER`); swap Anthropic for Groq or Gemini without touching the RAG pipeline
 - **Follow-up aware retrieval** — vague or context-dependent questions ("what about that?") are rewritten against chat history before retrieval
 - **Eval-safe corpus isolation** — the benchmark corpus and the live/demo corpus live in separate Pinecone namespaces (`benchmark` vs `shared_kb`) in the same index, so nothing ever leaks between "what we measure" and "what users query"
+- **Measured, not assumed, answer quality** — a RAGAS-based eval harness scores faithfulness, relevancy, and retrieval precision/recall against a hand-verified golden question set (see [Measured Answer Quality](#measured-answer-quality))
 
 ## Architecture
 
@@ -166,6 +167,21 @@ pytest
 
 The suite covers provider factory selection, the retrieval seam, Pinecone metadata mapping into citations, and query-rewrite behavior — all against fakes/mocks, no live API calls required.
 
+## Measured Answer Quality
+
+Most RAG demos never check whether their answers are actually good. This one does — a [RAGAS](https://docs.ragas.io/)-based evaluation harness scores the live pipeline against a 20-question golden set ([`data/eval/golden_qa.json`](data/eval/golden_qa.json)), authored and verified against the actual manual text, run only against the frozen `benchmark` Pinecone namespace (412 vectors, never touched by future uploads).
+
+| Metric | Score | What it means |
+|---|---|---|
+| Faithfulness | **0.876** | Does the answer stick to what's actually in the retrieved chunks (low hallucination)? |
+| Answer Relevancy | **0.481** | Does the answer address what was actually asked? |
+| Context Precision | **0.828** | Are the most relevant retrieved chunks ranked first? |
+| Context Recall | **0.983** | Does retrieval surface everything needed to answer? |
+
+**Run:** `python backend/app/scripts/run_eval.py` — judge model **Anthropic `claude-haiku-4-5`**, embeddings **Voyage `voyage-3.5`**, 20 questions, run 2026-07-10. Full per-question breakdown: [`data/eval/results/2026-07-10T15-25-03.697019+00-00.json`](data/eval/results/2026-07-10T15-25-03.697019+00-00.json).
+
+**Honest caveat:** the judge LLM is the same model family (`claude-haiku-4-5`) as this project's default answer-generation LLM — a same-model-judge setup carries a known self-preference bias in the LLM-eval literature. Independent-model judging (e.g. a different provider) would strengthen this further.
+
 ## Project Structure
 
 ```text
@@ -183,14 +199,20 @@ CampusCodex/
         vector_store.py              # VectorStore seam + Pinecone adapter
         chat_service.py              # Retrieval -> rerank -> context -> answer
         query_transformer.py         # Follow-up question rewriting
+      eval/                          # Golden-set loader, RAGAS judge wiring, scoring harness, reports
       schemas/chat.py                # Request/response contracts
-      scripts/seed_pinecone_corpus.py
+      scripts/
+        seed_pinecone_corpus.py
+        run_eval.py                  # RAGAS evaluation CLI
     requirements.txt
+    requirements-eval.txt            # Adds ragas (offline-only, not part of the deployed API image)
     .env.example
   frontend/                        # React/Vite chat UI
-  data/raw/                        # Source PDF
+  data/
+    raw/                            # Source PDF
+    eval/                           # Golden Q/A set + eval run results
 ```
 
 ## Roadmap
 
-This is an actively evolving portfolio project. Planned next steps include async request handling, persistent auth-scoped chat history, multi-document admin ingestion, token-by-token streaming, and a RAGAS-based answer-quality evaluation harness over the frozen benchmark corpus.
+This is an actively evolving portfolio project. Planned next steps include async request handling, persistent auth-scoped chat history, multi-document admin ingestion, and token-by-token streaming.

@@ -40,5 +40,12 @@ class Settings(BaseSettings):
             return str(path)
         return str((BACKEND_DIR / path).resolve())
 
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def parse_comma_separated_origins(cls, value: str | list[str]) -> str | list[str]:
+        if isinstance(value, str):
+            return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
+
 
 settings = Settings()

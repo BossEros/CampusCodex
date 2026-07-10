@@ -369,18 +369,6 @@ export default function App() {
     void handleSubmit(question);
   }
 
-  function getIndexStatusText() {
-    if (isLoadingStatus) {
-      return "Checking index...";
-    }
-
-    if (statusError || !indexStatus?.index_loaded) {
-      return "Index unavailable";
-    }
-
-    return "Index ready";
-  }
-
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -388,10 +376,8 @@ export default function App() {
           <SparkleIcon size={14} />
         </div>
         <div className="brand-copy">
-          <p className="brand-wordmark">Nimbus</p>
-          <p className="brand-subtitle">Docs Assistant</p>
+          <p className="brand-wordmark">CampusCodex</p>
         </div>
-        <p className="index-status-text">{getIndexStatusText()}</p>
       </header>
 
       <div ref={messageListRef} className="message-list">
